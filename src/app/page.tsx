@@ -111,19 +111,24 @@ export default function Home() {
   const winner = sortedPlayers[0];
 
   const createRoom = () => {
-    if (!nickname.trim()) {
+    const safeNickname = nickname.replace(/\s+/g, " ").trim();
+    if (!safeNickname) {
       setError("Masukkan nickname dulu.");
       return;
     }
-    getSocket().emit("room:create", { name: nickname });
+    setError("");
+    getSocket().emit("room:create", { name: safeNickname });
   };
 
   const joinRoom = () => {
-    if (!nickname.trim() || !roomCodeInput.trim()) {
+    const safeNickname = nickname.replace(/\s+/g, " ").trim();
+    const safeRoomCode = roomCodeInput.replace(/\s+/g, "").trim().toUpperCase();
+    if (!safeNickname || !safeRoomCode) {
       setError("Nickname dan kode room wajib diisi.");
       return;
     }
-    getSocket().emit("room:join", { code: roomCodeInput.toUpperCase(), name: nickname });
+    setError("");
+    getSocket().emit("room:join", { code: safeRoomCode, name: safeNickname });
   };
 
   const startGame = () => {
@@ -165,26 +170,46 @@ export default function Home() {
 
             {!room ? (
               <div className="mt-6 space-y-4">
-                <input
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="Masukkan nickname"
-                  className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50"
-                />
-                <input
-                  value={roomCodeInput}
-                  onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
-                  placeholder="Kode room (untuk join)"
-                  className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50"
-                />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button onClick={createRoom} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950">
-                    Create Room
-                  </button>
-                  <button onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white">
-                    Join Room
-                  </button>
-                </div>
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    createRoom();
+                  }}
+                >
+                  <input
+                    value={nickname}
+                    onChange={(e) => {
+                      setNickname(e.target.value);
+                      if (error) setError("");
+                    }}
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="Masukkan nickname"
+                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50"
+                  />
+                  <input
+                    value={roomCodeInput}
+                    onChange={(e) => {
+                      setRoomCodeInput(e.target.value.toUpperCase());
+                      if (error) setError("");
+                    }}
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="Kode room (untuk join)"
+                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50"
+                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button type="submit" className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950">
+                      Create Room
+                    </button>
+                    <button type="button" onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white">
+                      Join Room
+                    </button>
+                  </div>
+                </form>
               </div>
             ) : (
               <div className="mt-6 space-y-4">
