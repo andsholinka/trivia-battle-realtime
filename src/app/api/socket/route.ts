@@ -1,143 +1,85 @@
 import { Server as NetServer } from "http";
 import { NextRequest } from "next/server";
 import { Server as SocketIOServer } from "socket.io";
+import {
+  advanceRoomToLeaderboard,
+  createRoom,
+  goToNextQuestion,
+  joinRoom,
+  removePlayerBySocket,
+  sanitizeRoom,
+  startRoom,
+  submitAnswer,
+} from "@/lib/rooms";
+import { LEADERBOARD_PAUSE_MS, QUESTION_DURATION_MS, QUESTIONS } from "@/lib/questions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Player = {
-  id: string;
-  name: string;
-  score: number;
-  answeredAt?: number;
-  answer?: string;
+type TimerState = {
+  questionTimeout?: NodeJS.Timeout;
+  leaderboardTimeout?: NodeJS.Timeout;
 };
 
-type Question = {
-  id: number;
-  category: string;
-  question: string;
-  options: string[];
-  answer: string;
-};
-
-type Room = {
-  code: string;
-  hostId: string;
-  players: Player[];
-  status: "lobby" | "question" | "leaderboard" | "finished";
-  currentQuestionIndex: number;
-  round: number;
-  maxRounds: number;
-  questionEndsAt?: number;
-  timer?: NodeJS.Timeout;
-};
-
-const QUESTION_DURATION_MS = 15000;
-const LEADERBOARD_PAUSE_MS = 5000;
-
-const QUESTIONS: Question[] = [
-  { id: 1, category: "Pengetahuan Umum", question: "Planet terbesar di tata surya adalah...", options: ["Mars", "Jupiter", "Saturnus", "Venus"], answer: "Jupiter" },
-  { id: 2, category: "Teknologi", question: "HTML merupakan singkatan dari...", options: ["HyperText Markup Language", "HighText Machine Language", "Hyper Tool Main Language", "HomeText Markdown Language"], answer: "HyperText Markup Language" },
-  { id: 3, category: "Indonesia", question: "Ibukota Jawa Barat adalah...", options: ["Bandung", "Semarang", "Surabaya", "Serang"], answer: "Bandung" },
-  { id: 4, category: "Hiburan", question: "Campuran warna biru dan kuning menghasilkan warna...", options: ["Merah", "Hijau", "Ungu", "Abu-abu"], answer: "Hijau" },
-  { id: 5, category: "Sains", question: "Air mendidih pada suhu berapa derajat Celcius?", options: ["90", "95", "100", "110"], answer: "100" },
-];
-
-const rooms = new Map<string, Room>();
-
-function generateRoomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+declare global {
+  // eslint-disable-next-line no-var
+  var __triviaRoomTimers: Map<string, TimerState> | undefined;
 }
 
-function sanitizeRoom(room: Room) {
-  const currentQuestion = QUESTIONS[room.currentQuestionIndex];
-  return {
-    code: room.code,
-    hostId: room.hostId,
-    players: room.players
-      .map(({ answeredAt, answer, ...player }) => ({
-        ...player,
-        hasAnswered: Boolean(answer),
-      }))
-      .sort((a, b) => b.score - a.score),
-    status: room.status,
-    round: room.round,
-    maxRounds: room.maxRounds,
-    questionEndsAt: room.questionEndsAt ?? null,
-    currentQuestion:
-      room.status === "question" && currentQuestion
-        ? {
-            id: currentQuestion.id,
-            category: currentQuestion.category,
-            question: currentQuestion.question,
-            options: currentQuestion.options,
-          }
-        : null,
-  };
+const roomTimers = globalThis.__triviaRoomTimers ?? new Map<string, TimerState>();
+globalThis.__triviaRoomTimers = roomTimers;
+
+function clearTimers(code: string) {
+  const timers = roomTimers.get(code);
+  if (!timers) return;
+
+  if (timers.questionTimeout) clearTimeout(timers.questionTimeout);
+  if (timers.leaderboardTimeout) clearTimeout(timers.leaderboardTimeout);
+  roomTimers.delete(code);
 }
 
-function clearRoomTimer(room: Room) {
-  if (room.timer) {
-    clearTimeout(room.timer);
-    room.timer = undefined;
-  }
-}
+function scheduleQuestionTimeout(io: SocketIOServer, roomCode: string) {
+  const timers = roomTimers.get(roomCode) ?? {};
+  if (timers.questionTimeout) clearTimeout(timers.questionTimeout);
 
-function scheduleNextStep(io: SocketIOServer, room: Room) {
-  clearRoomTimer(room);
-  room.timer = setTimeout(() => {
-    if (room.round >= room.maxRounds) {
-      room.status = "finished";
-      room.questionEndsAt = undefined;
-      io.to(room.code).emit("room:update", sanitizeRoom(room));
-      return;
+  timers.questionTimeout = setTimeout(async () => {
+    const room = await advanceRoomToLeaderboard(roomCode);
+    if (!room) return;
+
+    io.to(room.code).emit("room:update", sanitizeRoom(room));
+    io.to(room.code).emit("question:result", {
+      answer: QUESTIONS[room.currentQuestionIndex]?.answer ?? null,
+      players: room.players.map((player) => ({ name: player.name, score: player.score })),
+    });
+
+    if (room.status === "leaderboard") {
+      scheduleLeaderboardTimeout(io, room.code);
+    } else {
+      clearTimers(room.code);
     }
-
-    room.round += 1;
-    room.currentQuestionIndex = (room.currentQuestionIndex + 1) % QUESTIONS.length;
-    startQuestion(io, room);
-  }, LEADERBOARD_PAUSE_MS);
-}
-
-function advanceToLeaderboard(io: SocketIOServer, room: Room) {
-  clearRoomTimer(room);
-  const question = QUESTIONS[room.currentQuestionIndex];
-
-  room.players.forEach((player) => {
-    if (player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt) {
-      const responseMs = Math.max(0, QUESTION_DURATION_MS - (room.questionEndsAt - player.answeredAt));
-      const speedBonus = Math.max(100, 1000 - Math.floor(responseMs / 20));
-      player.score += speedBonus;
-    }
-  });
-
-  room.status = room.round >= room.maxRounds ? "finished" : "leaderboard";
-  room.questionEndsAt = undefined;
-
-  io.to(room.code).emit("room:update", sanitizeRoom(room));
-  io.to(room.code).emit("question:result", {
-    answer: question.answer,
-    players: room.players.map((player) => ({ name: player.name, score: player.score })),
-  });
-
-  if (room.status === "leaderboard") {
-    scheduleNextStep(io, room);
-  }
-}
-
-function startQuestion(io: SocketIOServer, room: Room) {
-  clearRoomTimer(room);
-
-  room.players = room.players.map((player) => ({ ...player, answer: undefined, answeredAt: undefined }));
-  room.status = "question";
-  room.questionEndsAt = Date.now() + QUESTION_DURATION_MS;
-  io.to(room.code).emit("room:update", sanitizeRoom(room));
-
-  room.timer = setTimeout(() => {
-    advanceToLeaderboard(io, room);
   }, QUESTION_DURATION_MS);
+
+  roomTimers.set(roomCode, timers);
+}
+
+function scheduleLeaderboardTimeout(io: SocketIOServer, roomCode: string) {
+  const timers = roomTimers.get(roomCode) ?? {};
+  if (timers.leaderboardTimeout) clearTimeout(timers.leaderboardTimeout);
+
+  timers.leaderboardTimeout = setTimeout(async () => {
+    const room = await goToNextQuestion(roomCode);
+    if (!room) return;
+
+    io.to(room.code).emit("room:update", sanitizeRoom(room));
+
+    if (room.status === "question") {
+      scheduleQuestionTimeout(io, room.code);
+    } else {
+      clearTimers(room.code);
+    }
+  }, LEADERBOARD_PAUSE_MS);
+
+  roomTimers.set(roomCode, timers);
 }
 
 function attachIO(req: NextRequest) {
@@ -158,101 +100,87 @@ function attachIO(req: NextRequest) {
     });
 
     io.on("connection", (socket) => {
-      socket.on("room:create", ({ name }: { name: string }) => {
+      socket.on("room:create", async ({ name }: { name: string }) => {
         const trimmed = name?.trim();
         if (!trimmed) return;
 
-        let code = generateRoomCode();
-        while (rooms.has(code)) code = generateRoomCode();
-
-        const room: Room = {
-          code,
-          hostId: socket.id,
-          players: [{ id: socket.id, name: trimmed, score: 0 }],
-          status: "lobby",
-          currentQuestionIndex: 0,
-          round: 0,
-          maxRounds: 5,
-        };
-
-        rooms.set(code, room);
-        socket.join(code);
+        const room = await createRoom(trimmed, socket.id);
+        socket.join(room.code);
         socket.emit("room:joined", sanitizeRoom(room));
       });
 
-      socket.on("room:join", ({ code, name }: { code: string; name: string }) => {
-        const room = rooms.get(code?.trim().toUpperCase());
+      socket.on("room:join", async ({ code, name }: { code: string; name: string }) => {
+        const safeCode = code?.trim().toUpperCase();
         const trimmed = name?.trim();
-        if (!room || !trimmed) {
+        if (!safeCode || !trimmed) {
           socket.emit("room:error", "Room tidak ditemukan.");
           return;
         }
 
-        if (room.status !== "lobby") {
-          socket.emit("room:error", "Game sudah dimulai.");
+        const result = await joinRoom(safeCode, trimmed, socket.id);
+        if ("error" in result) {
+          socket.emit("room:error", result.error);
           return;
         }
 
-        const duplicateName = room.players.some((player) => player.name.toLowerCase() === trimmed.toLowerCase());
-        if (duplicateName) {
-          socket.emit("room:error", "Nickname sudah dipakai di room ini.");
-          return;
-        }
-
-        room.players.push({ id: socket.id, name: trimmed, score: 0 });
-        socket.join(room.code);
-        io.to(room.code).emit("room:update", sanitizeRoom(room));
-        socket.emit("room:joined", sanitizeRoom(room));
+        socket.join(result.room.code);
+        io.to(result.room.code).emit("room:update", sanitizeRoom(result.room));
+        socket.emit("room:joined", sanitizeRoom(result.room));
       });
 
-      socket.on("room:start", ({ code }: { code: string }) => {
-        const room = rooms.get(code);
-        if (!room || room.hostId !== socket.id) return;
-        if (room.players.length < 2) {
-          socket.emit("room:error", "Minimal butuh 2 pemain untuk mulai game.");
+      socket.on("room:start", async ({ code }: { code: string }) => {
+        const roomCode = code?.trim().toUpperCase();
+        if (!roomCode) return;
+
+        const result = await startRoom(roomCode, socket.id);
+        if ("error" in result) {
+          socket.emit("room:error", result.error);
           return;
         }
-        room.round = 1;
-        room.currentQuestionIndex = 0;
-        startQuestion(io, room);
+
+        if (!result.room) return;
+
+        io.to(result.room.code).emit("room:update", sanitizeRoom(result.room));
+        scheduleQuestionTimeout(io, result.room.code);
       });
 
-      socket.on("question:answer", ({ code, answer }: { code: string; answer: string }) => {
-        const room = rooms.get(code);
-        if (!room || room.status !== "question") return;
+      socket.on("question:answer", async ({ code, answer }: { code: string; answer: string }) => {
+        const roomCode = code?.trim().toUpperCase();
+        if (!roomCode) return;
 
-        const player = room.players.find((entry) => entry.id === socket.id);
-        if (!player || player.answer) return;
+        const result = await submitAnswer(roomCode, socket.id, answer);
+        if (!result.room) return;
 
-        player.answer = answer;
-        player.answeredAt = Date.now();
-        io.to(room.code).emit("room:update", sanitizeRoom(room));
+        io.to(result.room.code).emit("room:update", sanitizeRoom(result.room));
 
-        const everyoneAnswered = room.players.every((entry) => entry.answer);
+        const everyoneAnswered = result.room.players.every((player) => player.answer);
         if (everyoneAnswered) {
-          advanceToLeaderboard(io, room);
+          clearTimers(result.room.code);
+          const advancedRoom = await advanceRoomToLeaderboard(result.room.code);
+          if (!advancedRoom) return;
+
+          io.to(advancedRoom.code).emit("room:update", sanitizeRoom(advancedRoom));
+          io.to(advancedRoom.code).emit("question:result", {
+            answer: QUESTIONS[advancedRoom.currentQuestionIndex]?.answer ?? null,
+            players: advancedRoom.players.map((player) => ({ name: player.name, score: player.score })),
+          });
+
+          if (advancedRoom.status === "leaderboard") {
+            scheduleLeaderboardTimeout(io, advancedRoom.code);
+          }
         }
       });
 
-      socket.on("disconnect", () => {
-        rooms.forEach((room, code) => {
-          const playerIndex = room.players.findIndex((player) => player.id === socket.id);
-          if (playerIndex === -1) return;
+      socket.on("disconnect", async () => {
+        const updatedRoom = await removePlayerBySocket(socket.id);
+        if (!updatedRoom) return;
 
-          room.players.splice(playerIndex, 1);
+        if ("deletedCode" in updatedRoom) {
+          clearTimers(updatedRoom.deletedCode);
+          return;
+        }
 
-          if (room.players.length === 0) {
-            clearRoomTimer(room);
-            rooms.delete(code);
-            return;
-          }
-
-          if (room.hostId === socket.id) {
-            room.hostId = room.players[0].id;
-          }
-
-          io.to(room.code).emit("room:update", sanitizeRoom(room));
-        });
+        io.to(updatedRoom.code).emit("room:update", sanitizeRoom(updatedRoom));
       });
     });
 
