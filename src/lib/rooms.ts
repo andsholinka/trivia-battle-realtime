@@ -25,16 +25,19 @@ export type Room = {
   maxRounds: number;
   category?: string | null;
   questions: Question[];
+  questionsReady?: boolean;
   questionEndsAt: number | null;
   currentQuestionIndex: number;
   lastCorrectAnswer?: string | null;
   leaderboardEndsAt?: number | null;
+  finalResultsEndsAt?: number | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
 const DB_NAME = process.env.MONGODB_DB_NAME || "trivia_battle_realtime";
 const COLLECTION_NAME = "rooms";
+const FINAL_RESULTS_DURATION_MS = 10000;
 
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -74,8 +77,10 @@ export function sanitizeRoom(room: Room) {
     round: room.round,
     maxRounds: room.maxRounds,
     category: room.category ?? null,
+    questionsReady: Boolean(room.questionsReady),
     questionEndsAt: room.questionEndsAt,
     leaderboardEndsAt: room.leaderboardEndsAt ?? null,
+    finalResultsEndsAt: room.finalResultsEndsAt ?? null,
     lastCorrectAnswer: room.lastCorrectAnswer ?? null,
     currentQuestion:
       room.status === "question" && currentQuestion
@@ -109,10 +114,12 @@ export async function createRoom(name: string, socketId?: string) {
     maxRounds: 5,
     category: null,
     questions: [],
+    questionsReady: false,
     questionEndsAt: null,
     currentQuestionIndex: 0,
     lastCorrectAnswer: null,
     leaderboardEndsAt: null,
+    finalResultsEndsAt: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -179,7 +186,7 @@ export async function joinRoom(code: string, name: string, socketId?: string) {
   return { room: result };
 }
 
-async function startPreparedRoom(code: string, category: string) {
+export async function generateQuestionsForRoom(code: string, hostId: string, category: string) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
@@ -187,26 +194,23 @@ async function startPreparedRoom(code: string, category: string) {
     return { error: "Room tidak ditemukan.", status: 404 as const };
   }
 
-  if (room.players.length < 2) {
-    return { error: "Minimal butuh 2 pemain untuk mulai game.", status: 400 as const };
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa generate pertanyaan.", status: 403 as const };
   }
 
-  const questions = await generateTriviaQuestions(category);
-  const players = room.players.map((player) => ({ ...player, answer: undefined, answeredAt: undefined, hasAnswered: false, lastEarnedPoints: 0 }));
+  if (!category.trim()) {
+    return { error: "Kategori wajib diisi.", status: 400 as const };
+  }
+
+  const questions = await generateTriviaQuestions(category.trim());
   const updatedRoom = await collection.findOneAndUpdate(
     { code },
     {
       $set: {
-        players,
-        category,
+        category: category.trim(),
         questions,
         maxRounds: questions.length,
-        status: "question",
-        round: 1,
-        currentQuestionIndex: 0,
-        questionEndsAt: Date.now() + QUESTION_DURATION_MS,
-        lastCorrectAnswer: null,
-        leaderboardEndsAt: null,
+        questionsReady: true,
         updatedAt: new Date(),
       },
     },
@@ -216,8 +220,9 @@ async function startPreparedRoom(code: string, category: string) {
   return { room: updatedRoom };
 }
 
-export async function startRoomByHostId(code: string, hostId: string, category: string) {
-  const room = await getRoom(code);
+export async function startRoomByHostId(code: string, hostId: string) {
+  const collection = await getCollection();
+  const room = await collection.findOne({ code });
 
   if (!room) {
     return { error: "Room tidak ditemukan.", status: 404 as const };
@@ -227,11 +232,34 @@ export async function startRoomByHostId(code: string, hostId: string, category: 
     return { error: "Hanya host yang bisa memulai game.", status: 403 as const };
   }
 
-  if (!category.trim()) {
-    return { error: "Kategori wajib diisi.", status: 400 as const };
+  if (!room.questionsReady || room.questions.length === 0) {
+    return { error: "Generate pertanyaan dulu sebelum start game.", status: 400 as const };
   }
 
-  return startPreparedRoom(code, category.trim());
+  if (room.players.length < 2) {
+    return { error: "Minimal butuh 2 pemain untuk mulai game.", status: 400 as const };
+  }
+
+  const players = room.players.map((player) => ({ ...player, score: 0, answer: undefined, answeredAt: undefined, hasAnswered: false, lastEarnedPoints: 0 }));
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code },
+    {
+      $set: {
+        players,
+        status: "question",
+        round: 1,
+        currentQuestionIndex: 0,
+        questionEndsAt: Date.now() + QUESTION_DURATION_MS,
+        lastCorrectAnswer: null,
+        leaderboardEndsAt: null,
+        finalResultsEndsAt: null,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return { room: updatedRoom };
 }
 
 async function submitPreparedAnswer(code: string, playerMatcher: (player: Player) => boolean, answer: string) {
@@ -308,7 +336,8 @@ export async function advanceRoomToLeaderboard(code: string) {
     };
   });
 
-  const nextStatus = room.round >= room.maxRounds ? "finished" : "leaderboard";
+  const isFinalRound = room.round >= room.maxRounds;
+  const nextStatus = isFinalRound ? "finished" : "leaderboard";
   const updatedRoom = await collection.findOneAndUpdate(
     { code },
     {
@@ -317,7 +346,8 @@ export async function advanceRoomToLeaderboard(code: string) {
         status: nextStatus,
         questionEndsAt: null,
         lastCorrectAnswer: question.answer,
-        leaderboardEndsAt: nextStatus === "leaderboard" ? Date.now() + LEADERBOARD_PAUSE_MS : null,
+        leaderboardEndsAt: isFinalRound ? Date.now() + FINAL_RESULTS_DURATION_MS : Date.now() + LEADERBOARD_PAUSE_MS,
+        finalResultsEndsAt: isFinalRound ? Date.now() + FINAL_RESULTS_DURATION_MS : null,
         updatedAt: new Date(),
       },
     },
@@ -333,15 +363,6 @@ export async function goToNextQuestion(code: string) {
 
   if (!room || room.status !== "leaderboard") {
     return null;
-  }
-
-  if (room.round >= room.maxRounds) {
-    const finishedRoom = await collection.findOneAndUpdate(
-      { code },
-      { $set: { status: "finished", questionEndsAt: null, leaderboardEndsAt: null, updatedAt: new Date() } },
-      { returnDocument: "after" }
-    );
-    return finishedRoom;
   }
 
   const players = room.players.map((player) => ({
@@ -370,6 +391,57 @@ export async function goToNextQuestion(code: string) {
   );
 
   return updatedRoom;
+}
+
+export async function restartRoomWithCategory(code: string, hostId: string, category: string) {
+  const collection = await getCollection();
+  const room = await collection.findOne({ code });
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa restart game.", status: 403 as const };
+  }
+
+  if (!category.trim()) {
+    return { error: "Kategori wajib diisi.", status: 400 as const };
+  }
+
+  const questions = await generateTriviaQuestions(category.trim());
+  const players = room.players.map((player) => ({
+    ...player,
+    score: 0,
+    answer: undefined,
+    answeredAt: undefined,
+    hasAnswered: false,
+    lastEarnedPoints: 0,
+  }));
+
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code },
+    {
+      $set: {
+        players,
+        category: category.trim(),
+        questions,
+        questionsReady: true,
+        maxRounds: questions.length,
+        status: "lobby",
+        round: 0,
+        currentQuestionIndex: 0,
+        questionEndsAt: null,
+        leaderboardEndsAt: null,
+        finalResultsEndsAt: null,
+        lastCorrectAnswer: null,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return { room: updatedRoom };
 }
 
 export async function removePlayerBySocket(socketId: string) {

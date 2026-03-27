@@ -27,8 +27,10 @@ type RoomState = {
   round: number;
   maxRounds: number;
   category?: string | null;
+  questionsReady?: boolean;
   questionEndsAt: number | null;
   leaderboardEndsAt?: number | null;
+  finalResultsEndsAt?: number | null;
   lastCorrectAnswer?: string | null;
   currentQuestion: CurrentQuestion | null;
 };
@@ -80,8 +82,7 @@ export default function Home() {
   }, [room?.code]);
 
   useEffect(() => {
-    if (!room?.code || !room || !currentPlayerId) return;
-    if (room.status !== "lobby") return;
+    if (!room?.code || !currentPlayerId || room.status !== "lobby") return;
 
     fetch(`/api/rooms/${room.code}/qr`, { cache: "no-store" })
       .then((response) => response.json())
@@ -93,7 +94,13 @@ export default function Home() {
   }, [room?.code, room?.status, currentPlayerId]);
 
   useEffect(() => {
-    const deadline = room?.status === "question" ? room.questionEndsAt : room?.status === "leaderboard" ? room.leaderboardEndsAt ?? null : null;
+    const deadline = room?.status === "question"
+      ? room.questionEndsAt
+      : room?.status === "leaderboard"
+        ? room.leaderboardEndsAt ?? null
+        : room?.status === "finished"
+          ? room.finalResultsEndsAt ?? null
+          : null;
 
     if (!deadline) {
       setTimeLeft(0);
@@ -108,7 +115,7 @@ export default function Home() {
     syncTimer();
     const interval = setInterval(syncTimer, 250);
     return () => clearInterval(interval);
-  }, [room?.questionEndsAt, room?.leaderboardEndsAt, room?.status]);
+  }, [room?.questionEndsAt, room?.leaderboardEndsAt, room?.finalResultsEndsAt, room?.status]);
 
   useEffect(() => {
     if (room?.status !== "question") {
@@ -117,7 +124,7 @@ export default function Home() {
   }, [room?.status, room?.currentQuestion?.id]);
 
   useEffect(() => {
-    if (room?.status === "leaderboard") {
+    if (room?.status === "leaderboard" || room?.status === "finished") {
       setShowResultFx(true);
       const timeout = setTimeout(() => setShowResultFx(false), 1800);
       return () => clearTimeout(timeout);
@@ -128,6 +135,7 @@ export default function Home() {
   const me = room?.players.find((player) => player.id === currentPlayerId) ?? null;
   const amIHost = Boolean(room && currentPlayerId && room.hostId === currentPlayerId);
   const effectiveRoomCode = scannedRoomCode || roomCodeInput;
+  const topThree = sortedPlayers.slice(0, 3);
 
   const createRoom = async () => {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
@@ -188,12 +196,33 @@ export default function Home() {
     }
   };
 
-  const startGame = async () => {
+  const generateQuestions = async () => {
     if (!room || !currentPlayerId) return;
     if (!category.trim()) {
-      setError("Kategori wajib diisi sebelum start game.");
+      setError("Kategori wajib diisi sebelum generate pertanyaan.");
       return;
     }
+
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch(`/api/rooms/${room.code}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostId: currentPlayerId, category }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Gagal generate pertanyaan.");
+      setRoom(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal generate pertanyaan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startGame = async () => {
+    if (!room || !currentPlayerId) return;
 
     try {
       setLoading(true);
@@ -201,13 +230,38 @@ export default function Home() {
       const response = await fetch(`/api/rooms/${room.code}/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: currentPlayerId, category }),
+        body: JSON.stringify({ hostId: currentPlayerId }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal memulai game.");
       setRoom(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal memulai game.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const restartGame = async () => {
+    if (!room || !currentPlayerId) return;
+    if (!category.trim()) {
+      setError("Kategori baru wajib diisi untuk restart game.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch(`/api/rooms/${room.code}/restart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostId: currentPlayerId, category }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Gagal restart game.");
+      setRoom(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal restart game.");
     } finally {
       setLoading(false);
     }
@@ -253,23 +307,19 @@ export default function Home() {
           <section className="rounded-[2rem] border border-white/10 bg-white/7 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
             <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby Control</p>
             <h2 className="mt-3 text-3xl font-black leading-none md:text-5xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Gabung Room ${scannedRoomCode}` : "Masuk ke arena kuis"}</h2>
-            <p className="mt-4 text-sm leading-7 text-white/65">Host menentukan kategori, lalu AI Gemini membuat 5 soal untuk semua pemain dalam room yang sama.</p>
+            <p className="mt-4 text-sm leading-7 text-white/65">Host menentukan kategori, generate soal dulu, baru start game.</p>
 
             {!room ? (
               <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : createRoom(); }}>
                 <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Masukkan nickname" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-
                 {scannedRoomCode ? (
-                  <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                    Join via QR ke room: <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span>
-                  </div>
+                  <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">Join via QR ke room: <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span></div>
                 ) : (
                   <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room (untuk join)" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
                 )}
-
                 <div className="grid gap-3 sm:grid-cols-2">
                   {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
-                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60 sm:col-span-1">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
+                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
             ) : (
@@ -286,12 +336,16 @@ export default function Home() {
                   <p className="mt-2 text-lg font-bold text-white">{room.status.toUpperCase()}</p>
                   <p className="mt-1 text-sm text-white/55">Round {room.round} / {room.maxRounds}</p>
                   {room.category ? <p className="mt-1 text-sm text-cyan-100">Kategori: {room.category}</p> : null}
+                  {room.questionsReady ? <p className="mt-1 text-sm text-emerald-100">Pertanyaan siap dimainkan.</p> : null}
                 </div>
 
                 {room.status === "lobby" && amIHost ? (
                   <div className="space-y-3">
                     <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Tentukan kategori soal, misal: sepak bola, anime, sejarah Indonesia" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-                    <button type="button" onClick={startGame} disabled={loading || room.players.length < 2} className="w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Generating..." : "Start Game"}</button>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-fuchsia-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
+                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
+                    </div>
                   </div>
                 ) : null}
 
@@ -322,7 +376,31 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {room.status === "finished" ? <div className="rounded-3xl border border-fuchsia-300/20 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-100">Game selesai.</div> : null}
+                {room.status === "finished" ? (
+                  <div className={`rounded-3xl border border-fuchsia-300/20 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(232,121,249,0.35)]" : ""}`}>
+                    <p className="text-base font-black">{me?.isCorrect ? "✅ Jawaban terakhir kamu benar!" : me?.hasAnswered ? "❌ Jawaban terakhir kamu salah." : "⏰ Kamu belum menjawab di soal terakhir."}</p>
+                    <p className="mt-2">Jawaban benar soal terakhir: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
+                    <p className="mt-1">Poin kamu di soal terakhir: <span className="font-bold">+{me?.lastEarnedPoints ?? 0}</span></p>
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <p className="text-xs uppercase tracking-[0.28em] text-white/50">Podium Akhir</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                        {topThree.map((player, index) => (
+                          <div key={player.id} className={`rounded-2xl border p-4 text-center ${index === 0 ? "border-yellow-300/40 bg-yellow-400/10" : index === 1 ? "border-slate-300/30 bg-slate-300/10" : "border-amber-700/40 bg-amber-700/10"}`}>
+                            <p className="text-2xl font-black">{index + 1}</p>
+                            <p className="mt-2 font-bold">{player.name}</p>
+                            <p className="text-sm text-white/70">{player.score} pts</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {amIHost ? (
+                      <div className="mt-4 space-y-3">
+                        <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori baru untuk restart game" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                        <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             )}
 
