@@ -46,6 +46,17 @@ export default function Home() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
   const [showResultFx, setShowResultFx] = useState(false);
+  const [scannedRoomCode, setScannedRoomCode] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const roomFromQr = (params.get("room") || "").trim().toUpperCase();
+    if (roomFromQr) {
+      setScannedRoomCode(roomFromQr);
+      setRoomCodeInput(roomFromQr);
+    }
+  }, []);
 
   useEffect(() => {
     if (!room?.code) return;
@@ -70,7 +81,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!room?.code || !room || !currentPlayerId) return;
-    if (!room || room.status !== "lobby") return;
+    if (room.status !== "lobby") return;
 
     fetch(`/api/rooms/${room.code}/qr`, { cache: "no-store" })
       .then((response) => response.json())
@@ -116,6 +127,7 @@ export default function Home() {
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
   const me = room?.players.find((player) => player.id === currentPlayerId) ?? null;
   const amIHost = Boolean(room && currentPlayerId && room.hostId === currentPlayerId);
+  const effectiveRoomCode = scannedRoomCode || roomCodeInput;
 
   const createRoom = async () => {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
@@ -137,6 +149,10 @@ export default function Home() {
       setRoom(data);
       const meData = data.players.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
       setCurrentPlayerId(meData?.id ?? null);
+      setScannedRoomCode("");
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", "/");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal membuat room.");
     } finally {
@@ -146,7 +162,7 @@ export default function Home() {
 
   const joinRoom = async () => {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
-    const safeRoomCode = roomCodeInput.replace(/\s+/g, "").trim().toUpperCase();
+    const safeRoomCode = effectiveRoomCode.replace(/\s+/g, "").trim().toUpperCase();
     if (!safeNickname || !safeRoomCode) {
       setError("Nickname dan kode room wajib diisi.");
       return;
@@ -236,20 +252,24 @@ export default function Home() {
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <section className="rounded-[2rem] border border-white/10 bg-white/7 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
             <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby Control</p>
-            <h2 className="mt-3 text-3xl font-black leading-none md:text-5xl">
-              {room ? `Room ${room.code}` : "Masuk ke arena kuis"}
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-white/65">
-              Host menentukan kategori, lalu AI Gemini membuat 5 soal untuk semua pemain dalam room yang sama.
-            </p>
+            <h2 className="mt-3 text-3xl font-black leading-none md:text-5xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Gabung Room ${scannedRoomCode}` : "Masuk ke arena kuis"}</h2>
+            <p className="mt-4 text-sm leading-7 text-white/65">Host menentukan kategori, lalu AI Gemini membuat 5 soal untuk semua pemain dalam room yang sama.</p>
 
             {!room ? (
-              <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); createRoom(); }}>
+              <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : createRoom(); }}>
                 <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Masukkan nickname" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-                <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room (untuk join)" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
+
+                {scannedRoomCode ? (
+                  <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                    Join via QR ke room: <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span>
+                  </div>
+                ) : (
+                  <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room (untuk join)" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
+                )}
+
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <button type="submit" disabled={loading} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button>
-                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Join Room"}</button>
+                  {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
+                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60 sm:col-span-1">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
             ) : (
