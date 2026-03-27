@@ -7,13 +7,14 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
   const { code } = await context.params;
   const body = await request.json();
   const hostId = typeof body?.hostId === "string" ? body.hostId : "";
+  const category = typeof body?.category === "string" ? body.category : "";
 
   const room = await getRoom(code.trim().toUpperCase());
   if (!room) {
     return Response.json({ error: "Room tidak ditemukan." }, { status: 404 });
   }
 
-  const result = await startRoomByHostId(room.code, hostId);
+  const result = await startRoomByHostId(room.code, hostId, category);
   if ("error" in result) {
     return Response.json({ error: result.error }, { status: result.status });
   }

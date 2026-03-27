@@ -25,6 +25,7 @@ type RoomState = {
   status: "lobby" | "question" | "leaderboard" | "finished";
   round: number;
   maxRounds: number;
+  category?: string | null;
   questionEndsAt: number | null;
   leaderboardEndsAt?: number | null;
   lastCorrectAnswer?: string | null;
@@ -40,6 +41,7 @@ export default function Home() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [category, setCategory] = useState("");
 
   useEffect(() => {
     if (!room?.code) return;
@@ -63,20 +65,22 @@ export default function Home() {
   }, [room?.code]);
 
   useEffect(() => {
-    if (!room?.questionEndsAt || room.status !== "question") {
+    const deadline = room?.status === "question" ? room.questionEndsAt : room?.status === "leaderboard" ? room.leaderboardEndsAt ?? null : null;
+
+    if (!deadline) {
       setTimeLeft(0);
       return;
     }
 
     const syncTimer = () => {
-      const seconds = Math.max(0, Math.ceil((room.questionEndsAt! - Date.now()) / 1000));
+      const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
       setTimeLeft(seconds);
     };
 
     syncTimer();
     const interval = setInterval(syncTimer, 250);
     return () => clearInterval(interval);
-  }, [room?.questionEndsAt, room?.status]);
+  }, [room?.questionEndsAt, room?.leaderboardEndsAt, room?.status]);
 
   useEffect(() => {
     if (room?.status !== "question") {
@@ -145,6 +149,10 @@ export default function Home() {
 
   const startGame = async () => {
     if (!room || !currentPlayerId) return;
+    if (!category.trim()) {
+      setError("Kategori wajib diisi sebelum start game.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -152,7 +160,7 @@ export default function Home() {
       const response = await fetch(`/api/rooms/${room.code}/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: currentPlayerId }),
+        body: JSON.stringify({ hostId: currentPlayerId, category }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal memulai game.");
@@ -196,7 +204,7 @@ export default function Home() {
             <h1 className="text-lg font-black tracking-tight text-white md:text-xl">Trivia Battle Real-Time</h1>
           </div>
           <div className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-100">
-            Game Flow Mode
+            AI Question Mode
           </div>
         </header>
 
@@ -207,7 +215,7 @@ export default function Home() {
               {room ? `Room ${room.code}` : "Masuk ke arena kuis"}
             </h2>
             <p className="mt-4 text-sm leading-7 text-white/65">
-              Create, join, start game, dan jawab soal sekarang sudah tersambung di UI.
+              Host menentukan kategori, lalu AI Gemini akan membuat 5 soal untuk semua pemain dalam room yang sama.
             </p>
 
             {!room ? (
@@ -264,12 +272,27 @@ export default function Home() {
                   <p className="text-xs uppercase tracking-[0.28em] text-white/45">Status</p>
                   <p className="mt-2 text-lg font-bold text-white">{room.status.toUpperCase()}</p>
                   <p className="mt-1 text-sm text-white/55">Round {room.round} / {room.maxRounds}</p>
+                  {room.category ? <p className="mt-1 text-sm text-cyan-100">Kategori: {room.category}</p> : null}
                 </div>
 
                 {room.status === "lobby" && amIHost ? (
-                  <button type="button" onClick={startGame} disabled={loading || room.players.length < 2} className="w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">
-                    {loading ? "Loading..." : "Start Game"}
-                  </button>
+                  <div className="space-y-3">
+                    <input
+                      value={category}
+                      onChange={(e) => {
+                        setCategory(e.target.value);
+                        if (error) setError("");
+                      }}
+                      autoCapitalize="sentences"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      placeholder="Tentukan kategori soal, misal: sepak bola, anime, sejarah Indonesia"
+                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50"
+                    />
+                    <button type="button" onClick={startGame} disabled={loading || room.players.length < 2} className="w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">
+                      {loading ? "Generating..." : "Start Game"}
+                    </button>
+                  </div>
                 ) : null}
 
                 {room.status === "question" && room.currentQuestion ? (
@@ -303,7 +326,7 @@ export default function Home() {
                 {room.status === "leaderboard" ? (
                   <div className="rounded-3xl border border-amber-300/20 bg-amber-400/10 p-4 text-sm text-amber-100">
                     <p>Jawaban benar: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
-                    <p className="mt-2">Menampilkan leaderboard ronde ini. Soal berikutnya akan mulai otomatis.</p>
+                    <p className="mt-2">Soal berikutnya akan mulai otomatis dalam {timeLeft}s.</p>
                   </div>
                 ) : null}
 

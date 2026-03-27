@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import getMongoClientPromise from "@/lib/mongodb";
-import { QUESTIONS } from "@/lib/questions";
+import { generateTriviaQuestions } from "@/lib/gemini";
+import { LEADERBOARD_PAUSE_MS, QUESTION_DURATION_MS, Question } from "@/lib/questions";
 
 export type Player = {
   id: string;
@@ -21,6 +22,8 @@ export type Room = {
   status: RoomStatus;
   round: number;
   maxRounds: number;
+  category?: string | null;
+  questions: Question[];
   questionEndsAt: number | null;
   currentQuestionIndex: number;
   lastCorrectAnswer?: string | null;
@@ -53,7 +56,7 @@ async function getCollection() {
 }
 
 export function sanitizeRoom(room: Room) {
-  const currentQuestion = QUESTIONS[room.currentQuestionIndex];
+  const currentQuestion = room.questions[room.currentQuestionIndex];
 
   return {
     code: room.code,
@@ -68,6 +71,7 @@ export function sanitizeRoom(room: Room) {
     status: room.status,
     round: room.round,
     maxRounds: room.maxRounds,
+    category: room.category ?? null,
     questionEndsAt: room.questionEndsAt,
     leaderboardEndsAt: room.leaderboardEndsAt ?? null,
     lastCorrectAnswer: room.lastCorrectAnswer ?? null,
@@ -101,6 +105,8 @@ export async function createRoom(name: string, socketId?: string) {
     status: "lobby",
     round: 0,
     maxRounds: 5,
+    category: null,
+    questions: [],
     questionEndsAt: null,
     currentQuestionIndex: 0,
     lastCorrectAnswer: null,
@@ -170,7 +176,7 @@ export async function joinRoom(code: string, name: string, socketId?: string) {
   return { room: result };
 }
 
-async function startPreparedRoom(code: string) {
+async function startPreparedRoom(code: string, category: string) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
@@ -182,16 +188,20 @@ async function startPreparedRoom(code: string) {
     return { error: "Minimal butuh 2 pemain untuk mulai game.", status: 400 as const };
   }
 
+  const questions = await generateTriviaQuestions(category);
   const players = room.players.map((player) => ({ ...player, answer: undefined, answeredAt: undefined, hasAnswered: false }));
   const updatedRoom = await collection.findOneAndUpdate(
     { code },
     {
       $set: {
         players,
+        category,
+        questions,
+        maxRounds: questions.length,
         status: "question",
         round: 1,
         currentQuestionIndex: 0,
-        questionEndsAt: Date.now() + 15000,
+        questionEndsAt: Date.now() + QUESTION_DURATION_MS,
         lastCorrectAnswer: null,
         leaderboardEndsAt: null,
         updatedAt: new Date(),
@@ -203,22 +213,7 @@ async function startPreparedRoom(code: string) {
   return { room: updatedRoom };
 }
 
-export async function startRoom(code: string, hostSocketId: string) {
-  const room = await getRoom(code);
-
-  if (!room) {
-    return { error: "Room tidak ditemukan.", status: 404 as const };
-  }
-
-  const hostPlayer = room.players.find((player) => player.id === room.hostId);
-  if (!hostPlayer || hostPlayer.socketId !== hostSocketId) {
-    return { error: "Hanya host yang bisa memulai game.", status: 403 as const };
-  }
-
-  return startPreparedRoom(code);
-}
-
-export async function startRoomByHostId(code: string, hostId: string) {
+export async function startRoomByHostId(code: string, hostId: string, category: string) {
   const room = await getRoom(code);
 
   if (!room) {
@@ -229,7 +224,11 @@ export async function startRoomByHostId(code: string, hostId: string) {
     return { error: "Hanya host yang bisa memulai game.", status: 403 as const };
   }
 
-  return startPreparedRoom(code);
+  if (!category.trim()) {
+    return { error: "Kategori wajib diisi.", status: 400 as const };
+  }
+
+  return startPreparedRoom(code, category.trim());
 }
 
 async function submitPreparedAnswer(code: string, playerMatcher: (player: Player) => boolean, answer: string) {
@@ -272,10 +271,6 @@ async function submitPreparedAnswer(code: string, playerMatcher: (player: Player
   return { room: updatedRoom };
 }
 
-export async function submitAnswer(code: string, socketId: string, answer: string) {
-  return submitPreparedAnswer(code, (player) => player.socketId === socketId, answer);
-}
-
 export async function submitAnswerByPlayerId(code: string, playerId: string, answer: string) {
   return submitPreparedAnswer(code, (player) => player.id === playerId, answer);
 }
@@ -288,10 +283,14 @@ export async function advanceRoomToLeaderboard(code: string) {
     return null;
   }
 
-  const question = QUESTIONS[room.currentQuestionIndex];
+  const question = room.questions[room.currentQuestionIndex];
+  if (!question) {
+    return null;
+  }
+
   const players = room.players.map((player) => {
     if (player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt) {
-      const responseMs = Math.max(0, 15000 - (room.questionEndsAt - player.answeredAt));
+      const responseMs = Math.max(0, QUESTION_DURATION_MS - (room.questionEndsAt - player.answeredAt));
       const speedBonus = Math.max(100, 1000 - Math.floor(responseMs / 20));
       return {
         ...player,
@@ -311,7 +310,7 @@ export async function advanceRoomToLeaderboard(code: string) {
         status: nextStatus,
         questionEndsAt: null,
         lastCorrectAnswer: question.answer,
-        leaderboardEndsAt: nextStatus === "leaderboard" ? Date.now() + 5000 : null,
+        leaderboardEndsAt: nextStatus === "leaderboard" ? Date.now() + LEADERBOARD_PAUSE_MS : null,
         updatedAt: new Date(),
       },
     },
@@ -352,8 +351,8 @@ export async function goToNextQuestion(code: string) {
         players,
         status: "question",
         round: room.round + 1,
-        currentQuestionIndex: (room.currentQuestionIndex + 1) % QUESTIONS.length,
-        questionEndsAt: Date.now() + 15000,
+        currentQuestionIndex: room.currentQuestionIndex + 1,
+        questionEndsAt: Date.now() + QUESTION_DURATION_MS,
         leaderboardEndsAt: null,
         lastCorrectAnswer: null,
         updatedAt: new Date(),
@@ -380,7 +379,8 @@ export async function removePlayerBySocket(socketId: string) {
     return { deletedCode: room.code };
   }
 
-  const nextHostId = room.hostId === room.players.find((player) => player.socketId === socketId)?.id ? players[0].id : room.hostId;
+  const leavingPlayer = room.players.find((player) => player.socketId === socketId);
+  const nextHostId = room.hostId === leavingPlayer?.id ? players[0].id : room.hostId;
 
   const updatedRoom = await collection.findOneAndUpdate(
     { code: room.code },
