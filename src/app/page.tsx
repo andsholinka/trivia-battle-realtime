@@ -49,6 +49,7 @@ export default function Home() {
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
   const [showResultFx, setShowResultFx] = useState(false);
   const [scannedRoomCode, setScannedRoomCode] = useState("");
+  const [podiumReveal, setPodiumReveal] = useState(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -131,11 +132,31 @@ export default function Home() {
     }
   }, [room?.status, room?.round]);
 
+  useEffect(() => {
+    if (room?.status !== "finished") {
+      setPodiumReveal(0);
+      return;
+    }
+
+    setPodiumReveal(0);
+    const t1 = setTimeout(() => setPodiumReveal(1), 700);
+    const t2 = setTimeout(() => setPodiumReveal(2), 1700);
+    const t3 = setTimeout(() => setPodiumReveal(3), 2900);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [room?.status, room?.code]);
+
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
   const me = room?.players.find((player) => player.id === currentPlayerId) ?? null;
   const amIHost = Boolean(room && currentPlayerId && room.hostId === currentPlayerId);
   const effectiveRoomCode = scannedRoomCode || roomCodeInput;
   const topThree = sortedPlayers.slice(0, 3);
+  const third = topThree[2];
+  const second = topThree[1];
+  const first = topThree[0];
 
   const createRoom = async () => {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
@@ -288,115 +309,163 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#070816] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_25%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.18),transparent_24%),radial-gradient(circle_at_bottom,rgba(236,72,153,0.18),transparent_28%),linear-gradient(160deg,#060816_0%,#0a1024_45%,#090312_100%)]" />
-      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.9)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.9)_1px,transparent_1px)] [background-size:56px_56px]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#12051f] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(34,211,238,0.24),transparent_20%),radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.22),transparent_22%),radial-gradient(circle_at_50%_100%,rgba(168,85,247,0.22),transparent_28%),linear-gradient(160deg,#14051f_0%,#1b0f3a_45%,#0d132a_100%)]" />
+      <div className="absolute -top-20 left-10 h-56 w-56 rounded-full bg-fuchsia-500/20 blur-3xl" />
+      <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" />
+      <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-yellow-400/10 blur-3xl" />
+      <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
-      <section className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-6 md:px-8 lg:px-10">
-        <header className="flex items-center justify-between rounded-full border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.4em] text-cyan-200/70">JemauDusun Game Lab</p>
-            <h1 className="text-lg font-black tracking-tight text-white md:text-xl">Trivia Battle Real-Time</h1>
-          </div>
-          <div className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-100">
-            AI Question Mode
-          </div>
-        </header>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <section className="rounded-[2rem] border border-white/10 bg-white/7 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
-            <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby Control</p>
-            <h2 className="mt-3 text-3xl font-black leading-none md:text-5xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Gabung Room ${scannedRoomCode}` : "Masuk ke arena kuis"}</h2>
-            <p className="mt-4 text-sm leading-7 text-white/65">Host menentukan kategori, generate soal dulu, baru start game.</p>
+      <section className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-6 md:px-8 lg:px-10">
+        <div className="mt-2 grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
+          <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby</p>
+                <h2 className="mt-2 text-3xl font-black leading-none md:text-5xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Join ${scannedRoomCode}` : "Trivia Battle"}</h2>
+              </div>
+              {room ? (
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Status</p>
+                  <p className="mt-1 text-sm font-black text-cyan-100">{room.status.toUpperCase()}</p>
+                </div>
+              ) : null}
+            </div>
 
             {!room ? (
               <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : createRoom(); }}>
-                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Masukkan nickname" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Nama pemain" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+
                 {scannedRoomCode ? (
-                  <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">Join via QR ke room: <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span></div>
+                  <div className="rounded-3xl border border-cyan-300/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
+                    QR terhubung ke room <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span>
+                  </div>
                 ) : (
-                  <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room (untuk join)" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
+                  <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room untuk join" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
                 )}
+
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
-                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
+                  {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-cyan-400 via-sky-400 to-violet-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
+                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">Room berhasil dibuat / dimasuki.</div>
-                <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.28em] text-white/45">Kode Room</p>
-                  <p className="mt-2 text-3xl font-black tracking-[0.25em] text-white">{room.code}</p>
-                  {amIHost && qrCode ? <img src={qrCode} alt="QR Join Room" className="mt-4 w-44 rounded-2xl border border-white/10 bg-white/5 p-2" /> : null}
-                  {amIHost && joinUrl ? <p className="mt-3 break-all text-xs text-cyan-100/80">{joinUrl}</p> : null}
-                </div>
-                <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.28em] text-white/45">Status</p>
-                  <p className="mt-2 text-lg font-bold text-white">{room.status.toUpperCase()}</p>
-                  <p className="mt-1 text-sm text-white/55">Round {room.round} / {room.maxRounds}</p>
-                  {room.category ? <p className="mt-1 text-sm text-cyan-100">Kategori: {room.category}</p> : null}
-                  {room.questionsReady ? <p className="mt-1 text-sm text-emerald-100">Pertanyaan siap dimainkan.</p> : null}
+                <div className="rounded-[1.8rem] border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">Room aktif. Ajak teman masuk lalu mainkan kuisnya.</div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kode Room</p>
+                    <p className="mt-2 text-3xl font-black tracking-[0.25em] text-white">{room.code}</p>
+                    {room.category ? <p className="mt-2 text-sm text-cyan-100">Kategori: {room.category}</p> : null}
+                    {room.questionsReady ? <p className="mt-1 text-sm text-emerald-100">Pertanyaan siap dimainkan.</p> : null}
+                  </div>
+
+                  <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Progress</p>
+                    <p className="mt-2 text-lg font-black text-white">Round {room.round} / {room.maxRounds}</p>
+                    <p className="mt-1 text-sm text-white/60">{room.players.length} pemain di room</p>
+                    {room.status === "question" || room.status === "leaderboard" || room.status === "finished" ? <p className="mt-1 text-sm text-yellow-200">Timer: {timeLeft}s</p> : null}
+                  </div>
                 </div>
 
-                {room.status === "lobby" && amIHost ? (
-                  <div className="space-y-3">
-                    <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Tentukan kategori soal, misal: sepak bola, anime, sejarah Indonesia" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                {amIHost && room.status === "lobby" ? (
+                  <div className="space-y-4 rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
+                    <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori seru, misal: anime, sepak bola, Marvel, sejarah Indonesia" className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-fuchsia-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
-                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
+                      <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
+                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {amIHost && qrCode ? (
+                  <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">QR Join Room</p>
+                    <div className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                      <img src={qrCode} alt="QR Join Room" className="w-40 rounded-3xl border border-white/10 bg-white/5 p-2" />
+                      {joinUrl ? <p className="break-all text-xs text-cyan-100/80">{joinUrl}</p> : null}
                     </div>
                   </div>
                 ) : null}
 
                 {room.status === "question" && room.currentQuestion ? (
-                  <div className="rounded-3xl border border-cyan-300/20 bg-cyan-400/10 p-4">
+                  <div className="rounded-[1.8rem] border border-cyan-300/20 bg-cyan-400/10 p-5">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/70">{room.currentQuestion.category}</p>
-                      <p className="text-sm font-bold text-cyan-100">{timeLeft}s</p>
+                      <p className="rounded-full border border-cyan-300/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-100">{room.currentQuestion.category}</p>
+                      <p className="rounded-full bg-black/20 px-3 py-1 text-sm font-black text-cyan-100">{timeLeft}s</p>
                     </div>
-                    <p className="mt-3 text-lg font-bold text-white">{room.currentQuestion.question}</p>
-                    <div className="mt-4 grid gap-3">
-                      {room.currentQuestion.options.map((option) => {
+                    <p className="mt-4 text-xl font-black text-white md:text-2xl">{room.currentQuestion.question}</p>
+                    <div className="mt-5 grid gap-3">
+                      {room.currentQuestion.options.map((option, index) => {
                         const disabled = Boolean(selectedAnswer || me?.hasAnswered);
                         const active = selectedAnswer === option;
-                        return <button key={option} type="button" disabled={disabled} onClick={() => submitAnswer(option)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${active ? "border-emerald-300 bg-emerald-400/20 text-emerald-100" : "border-white/10 bg-black/20 text-white"} disabled:opacity-70`}>{option}</button>;
+                        const gradients = [
+                          "from-pink-500 to-rose-500",
+                          "from-cyan-500 to-sky-500",
+                          "from-amber-400 to-orange-500",
+                          "from-emerald-400 to-green-500",
+                        ];
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => submitAnswer(option)}
+                            className={`rounded-3xl border px-5 py-4 text-left text-base font-bold transition ${active ? "border-white/60 bg-white/20 text-white scale-[1.01]" : `border-white/10 bg-gradient-to-r ${gradients[index % gradients.length]} text-white`} disabled:opacity-70`}
+                          >
+                            {option}
+                          </button>
+                        );
                       })}
                     </div>
-                    {me?.hasAnswered ? <p className="mt-3 text-sm text-emerald-100">Jawaban sudah dikirim.</p> : null}
+                    {me?.hasAnswered ? <p className="mt-4 text-sm text-emerald-100">Jawaban sudah dikirim.</p> : null}
                   </div>
                 ) : null}
 
                 {room.status === "leaderboard" ? (
-                  <div className={`rounded-3xl border border-amber-300/20 bg-amber-400/10 p-4 text-sm text-amber-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(251,191,36,0.35)]" : ""}`}>
-                    <p className="text-base font-black">{me?.isCorrect ? "✅ Jawaban kamu benar!" : me?.hasAnswered ? "❌ Jawaban kamu salah." : "⏰ Kamu belum menjawab."}</p>
-                    <p className="mt-2">Jawaban benar: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
-                    <p className="mt-1">Poin kamu ronde ini: <span className="font-bold">+{me?.lastEarnedPoints ?? 0}</span></p>
-                    <p className="mt-2">Soal berikutnya akan mulai otomatis dalam {timeLeft}s.</p>
+                  <div className={`rounded-[1.8rem] border border-amber-300/20 bg-amber-400/10 p-5 text-sm text-amber-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(251,191,36,0.35)]" : ""}`}>
+                    <p className="text-lg font-black">{me?.isCorrect ? "✅ Jawaban kamu benar!" : me?.hasAnswered ? "❌ Jawaban kamu salah." : "⏰ Kamu belum menjawab."}</p>
+                    <p className="mt-2">Jawaban benar: <span className="font-black">{room.lastCorrectAnswer ?? "-"}</span></p>
+                    <p className="mt-1">Poin kamu ronde ini: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
+                    <p className="mt-3">Soal berikutnya mulai dalam {timeLeft}s.</p>
                   </div>
                 ) : null}
 
                 {room.status === "finished" ? (
-                  <div className={`rounded-3xl border border-fuchsia-300/20 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(232,121,249,0.35)]" : ""}`}>
-                    <p className="text-base font-black">{me?.isCorrect ? "✅ Jawaban terakhir kamu benar!" : me?.hasAnswered ? "❌ Jawaban terakhir kamu salah." : "⏰ Kamu belum menjawab di soal terakhir."}</p>
-                    <p className="mt-2">Jawaban benar soal terakhir: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
-                    <p className="mt-1">Poin kamu di soal terakhir: <span className="font-bold">+{me?.lastEarnedPoints ?? 0}</span></p>
-                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                      <p className="text-xs uppercase tracking-[0.28em] text-white/50">Podium Akhir</p>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                        {topThree.map((player, index) => (
-                          <div key={player.id} className={`rounded-2xl border p-4 text-center ${index === 0 ? "border-yellow-300/40 bg-yellow-400/10" : index === 1 ? "border-slate-300/30 bg-slate-300/10" : "border-amber-700/40 bg-amber-700/10"}`}>
-                            <p className="text-2xl font-black">{index + 1}</p>
-                            <p className="mt-2 font-bold">{player.name}</p>
-                            <p className="text-sm text-white/70">{player.score} pts</p>
-                          </div>
-                        ))}
+                  <div className={`rounded-[2rem] border border-fuchsia-300/20 bg-fuchsia-400/10 p-5 text-sm text-fuchsia-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(232,121,249,0.35)]" : ""}`}>
+                    <p className="text-center text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Final Result</p>
+                    <p className="mt-2 text-center text-2xl font-black text-white md:text-3xl">🎉 Hasil Akhir 🎉</p>
+                    <p className="mt-2 text-center">{me?.isCorrect ? "Jawaban terakhir kamu benar!" : me?.hasAnswered ? "Jawaban terakhir kamu salah." : "Kamu belum menjawab di soal terakhir."}</p>
+                    <p className="mt-1 text-center">Poin terakhir: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
+
+                    <div className="mt-6 space-y-3">
+                      <div className={`rounded-3xl border border-amber-700/40 bg-amber-700/15 p-4 text-center transition-all duration-700 ${podiumReveal >= 1 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
+                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 3</p>
+                        <p className="mt-2 text-3xl">🥉</p>
+                        <p className="mt-2 font-black text-white">{third?.name ?? "-"}</p>
+                        <p className="text-sm text-white/70">{third?.score ?? 0} pts</p>
+                      </div>
+
+                      <div className={`rounded-3xl border border-slate-300/40 bg-slate-300/10 p-5 text-center transition-all duration-700 ${podiumReveal >= 2 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
+                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 2</p>
+                        <p className="mt-2 text-4xl">🥈</p>
+                        <p className="mt-2 text-lg font-black text-white">{second?.name ?? "-"}</p>
+                        <p className="text-sm text-white/70">{second?.score ?? 0} pts</p>
+                      </div>
+
+                      <div className={`rounded-3xl border border-yellow-300/50 bg-yellow-400/15 p-6 text-center transition-all duration-700 ${podiumReveal >= 3 ? "translate-y-0 opacity-100 scale-100" : "translate-y-6 opacity-0 scale-95"}`}>
+                        <p className="text-xs uppercase tracking-[0.3em] text-yellow-100/80">Peringkat 1</p>
+                        <p className="mt-2 text-5xl">👑</p>
+                        <p className="mt-2 text-xl font-black text-white">{first?.name ?? "-"}</p>
+                        <p className="text-sm text-white/80">{first?.score ?? 0} pts</p>
                       </div>
                     </div>
+
                     {amIHost ? (
-                      <div className="mt-4 space-y-3">
-                        <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori baru untuk restart game" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-                        <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
+                      <div className="mt-6 space-y-3">
+                        <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori baru untuk restart game" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                        <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
                       </div>
                     ) : null}
                   </div>
@@ -404,34 +473,34 @@ export default function Home() {
               </div>
             )}
 
-            {error ? <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
+            {error ? <div className="mt-4 rounded-3xl border border-rose-300/20 bg-rose-400/10 px-5 py-4 text-sm text-rose-100">{error}</div> : null}
           </section>
 
-          <section className="rounded-[2rem] border border-white/10 bg-white/7 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+          <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Realtime Ranking</p>
-                <h3 className="mt-2 text-2xl font-black text-white">Player di Room</h3>
+                <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Leaderboard</p>
+                <h3 className="mt-2 text-2xl font-black text-white">Pemain di Room</h3>
               </div>
-              <div className="text-sm font-semibold text-white/55">{room ? `${room.players.length} pemain` : "0 pemain"}</div>
+              <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room ? `${room.players.length} pemain` : "0 pemain"}</div>
             </div>
 
             <div className="mt-5 space-y-3">
               {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => (
-                <div key={player.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+                <div key={player.id} className={`flex items-center justify-between rounded-3xl border px-4 py-4 ${index === 0 ? "border-yellow-300/30 bg-yellow-400/10" : index === 1 ? "border-slate-300/20 bg-slate-300/10" : index === 2 ? "border-amber-700/30 bg-amber-700/10" : "border-white/10 bg-black/20"}`}>
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-sm font-black text-white">#{index + 1}</div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-base font-black text-white">#{index + 1}</div>
                     <div>
-                      <p className="font-bold text-white">{player.name}</p>
+                      <p className="font-black text-white">{player.name}</p>
                       <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-cyan-200">{player.score}</p>
+                    <p className="text-xl font-black text-cyan-200">{player.score}</p>
                     <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? `+${player.lastEarnedPoints ?? 0} correct` : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
                   </div>
                 </div>
-              )) : <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-8 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
+              )) : <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
             </div>
           </section>
         </div>
