@@ -8,13 +8,14 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
   const body = await request.json();
   const hostId = typeof body?.hostId === "string" ? body.hostId : "";
   const category = typeof body?.category === "string" ? body.category : "";
+  const questionCount = typeof body?.questionCount === "number" ? body.questionCount : Number(body?.questionCount || 5);
 
   const room = await getRoom(code.trim().toUpperCase());
   if (!room) {
     return Response.json({ error: "Room tidak ditemukan." }, { status: 404 });
   }
 
-  const result = await restartRoomWithCategory(room.code, hostId, category);
+  const result = await restartRoomWithCategory(room.code, hostId, category, questionCount);
   if ("error" in result) {
     return Response.json({ error: result.error }, { status: result.status });
   }

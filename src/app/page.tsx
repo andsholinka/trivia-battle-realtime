@@ -26,6 +26,7 @@ type RoomState = {
   status: "lobby" | "question" | "leaderboard" | "finished";
   round: number;
   maxRounds: number;
+  questionCount?: number;
   category?: string | null;
   questionsReady?: boolean;
   questionEndsAt: number | null;
@@ -45,6 +46,7 @@ export default function Home() {
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [category, setCategory] = useState("");
+  const [questionCount, setQuestionCount] = useState("5");
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
   const [showResultFx, setShowResultFx] = useState(false);
@@ -230,7 +232,7 @@ export default function Home() {
       const response = await fetch(`/api/rooms/${room.code}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: currentPlayerId, category }),
+        body: JSON.stringify({ hostId: currentPlayerId, category, questionCount: Number(questionCount || 5) }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal generate pertanyaan.");
@@ -276,7 +278,7 @@ export default function Home() {
       const response = await fetch(`/api/rooms/${room.code}/restart`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: currentPlayerId, category }),
+        body: JSON.stringify({ hostId: currentPlayerId, category, questionCount: Number(questionCount || 5) }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal restart game.");
@@ -337,9 +339,7 @@ export default function Home() {
                 <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Nama pemain" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
 
                 {scannedRoomCode ? (
-                  <div className="rounded-3xl border border-cyan-300/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                    QR terhubung ke room <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span>
-                  </div>
+                  <div className="rounded-3xl border border-cyan-300/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">QR terhubung ke room <span className="font-black tracking-[0.2em]">{scannedRoomCode}</span></div>
                 ) : (
                   <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room untuk join" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
                 )}
@@ -365,6 +365,7 @@ export default function Home() {
                     <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Progress</p>
                     <p className="mt-2 text-lg font-black text-white">Round {room.round} / {room.maxRounds}</p>
                     <p className="mt-1 text-sm text-white/60">{room.players.length} pemain di room</p>
+                    <p className="mt-1 text-sm text-white/60">Jumlah pertanyaan: {room.questionCount ?? room.maxRounds}</p>
                     {room.status === "question" || room.status === "leaderboard" || room.status === "finished" ? <p className="mt-1 text-sm text-yellow-200">Timer: {timeLeft}s</p> : null}
                   </div>
                 </div>
@@ -372,6 +373,15 @@ export default function Home() {
                 {amIHost && room.status === "lobby" ? (
                   <div className="space-y-4 rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
                     <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori seru, misal: anime, sepak bola, Marvel, sejarah Indonesia" className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                    <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
+                      <div>
+                        <p className="mb-2 text-xs uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
+                        <input type="number" min={3} max={20} value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                      </div>
+                      <div className="flex items-end">
+                        <div className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-center text-sm text-white/70">3 - 20 soal</div>
+                      </div>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
                       <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
@@ -400,23 +410,8 @@ export default function Home() {
                       {room.currentQuestion.options.map((option, index) => {
                         const disabled = Boolean(selectedAnswer || me?.hasAnswered);
                         const active = selectedAnswer === option;
-                        const gradients = [
-                          "from-pink-500 to-rose-500",
-                          "from-cyan-500 to-sky-500",
-                          "from-amber-400 to-orange-500",
-                          "from-emerald-400 to-green-500",
-                        ];
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            disabled={disabled}
-                            onClick={() => submitAnswer(option)}
-                            className={`rounded-3xl border px-5 py-4 text-left text-base font-bold transition ${active ? "border-white/60 bg-white/20 text-white scale-[1.01]" : `border-white/10 bg-gradient-to-r ${gradients[index % gradients.length]} text-white`} disabled:opacity-70`}
-                          >
-                            {option}
-                          </button>
-                        );
+                        const gradients = ["from-pink-500 to-rose-500", "from-cyan-500 to-sky-500", "from-amber-400 to-orange-500", "from-emerald-400 to-green-500"];
+                        return <button key={option} type="button" disabled={disabled} onClick={() => submitAnswer(option)} className={`rounded-3xl border px-5 py-4 text-left text-base font-bold transition ${active ? "border-white/60 bg-white/20 text-white scale-[1.01]" : `border-white/10 bg-gradient-to-r ${gradients[index % gradients.length]} text-white`} disabled:opacity-70`}>{option}</button>;
                       })}
                     </div>
                     {me?.hasAnswered ? <p className="mt-4 text-sm text-emerald-100">Jawaban sudah dikirim.</p> : null}
@@ -438,33 +433,18 @@ export default function Home() {
                     <p className="mt-2 text-center text-2xl font-black text-white md:text-3xl">🎉 Hasil Akhir 🎉</p>
                     <p className="mt-2 text-center">{me?.isCorrect ? "Jawaban terakhir kamu benar!" : me?.hasAnswered ? "Jawaban terakhir kamu salah." : "Kamu belum menjawab di soal terakhir."}</p>
                     <p className="mt-1 text-center">Poin terakhir: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
-
                     <div className="mt-6 space-y-3">
-                      <div className={`rounded-3xl border border-amber-700/40 bg-amber-700/15 p-4 text-center transition-all duration-700 ${podiumReveal >= 1 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
-                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 3</p>
-                        <p className="mt-2 text-3xl">🥉</p>
-                        <p className="mt-2 font-black text-white">{third?.name ?? "-"}</p>
-                        <p className="text-sm text-white/70">{third?.score ?? 0} pts</p>
-                      </div>
-
-                      <div className={`rounded-3xl border border-slate-300/40 bg-slate-300/10 p-5 text-center transition-all duration-700 ${podiumReveal >= 2 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
-                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 2</p>
-                        <p className="mt-2 text-4xl">🥈</p>
-                        <p className="mt-2 text-lg font-black text-white">{second?.name ?? "-"}</p>
-                        <p className="text-sm text-white/70">{second?.score ?? 0} pts</p>
-                      </div>
-
-                      <div className={`rounded-3xl border border-yellow-300/50 bg-yellow-400/15 p-6 text-center transition-all duration-700 ${podiumReveal >= 3 ? "translate-y-0 opacity-100 scale-100" : "translate-y-6 opacity-0 scale-95"}`}>
-                        <p className="text-xs uppercase tracking-[0.3em] text-yellow-100/80">Peringkat 1</p>
-                        <p className="mt-2 text-5xl">👑</p>
-                        <p className="mt-2 text-xl font-black text-white">{first?.name ?? "-"}</p>
-                        <p className="text-sm text-white/80">{first?.score ?? 0} pts</p>
-                      </div>
+                      <div className={`rounded-3xl border border-amber-700/40 bg-amber-700/15 p-4 text-center transition-all duration-700 ${podiumReveal >= 1 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}><p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 3</p><p className="mt-2 text-3xl">🥉</p><p className="mt-2 font-black text-white">{third?.name ?? "-"}</p><p className="text-sm text-white/70">{third?.score ?? 0} pts</p></div>
+                      <div className={`rounded-3xl border border-slate-300/40 bg-slate-300/10 p-5 text-center transition-all duration-700 ${podiumReveal >= 2 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}><p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 2</p><p className="mt-2 text-4xl">🥈</p><p className="mt-2 text-lg font-black text-white">{second?.name ?? "-"}</p><p className="text-sm text-white/70">{second?.score ?? 0} pts</p></div>
+                      <div className={`rounded-3xl border border-yellow-300/50 bg-yellow-400/15 p-6 text-center transition-all duration-700 ${podiumReveal >= 3 ? "translate-y-0 opacity-100 scale-100" : "translate-y-6 opacity-0 scale-95"}`}><p className="text-xs uppercase tracking-[0.3em] text-yellow-100/80">Peringkat 1</p><p className="mt-2 text-5xl">👑</p><p className="mt-2 text-xl font-black text-white">{first?.name ?? "-"}</p><p className="text-sm text-white/80">{first?.score ?? 0} pts</p></div>
                     </div>
-
                     {amIHost ? (
-                      <div className="mt-6 space-y-3">
+                      <div className="mt-6 space-y-4">
                         <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori baru untuk restart game" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                        <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
+                          <input type="number" min={3} max={20} value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                          <div className="flex items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/70">3 - 20 soal</div>
+                        </div>
                         <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
                       </div>
                     ) : null}
@@ -484,7 +464,6 @@ export default function Home() {
               </div>
               <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room ? `${room.players.length} pemain` : "0 pemain"}</div>
             </div>
-
             <div className="mt-5 space-y-3">
               {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => (
                 <div key={player.id} className={`flex items-center justify-between rounded-3xl border px-4 py-4 ${index === 0 ? "border-yellow-300/30 bg-yellow-400/10" : index === 1 ? "border-slate-300/20 bg-slate-300/10" : index === 2 ? "border-amber-700/30 bg-amber-700/10" : "border-white/10 bg-black/20"}`}>

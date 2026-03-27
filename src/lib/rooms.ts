@@ -23,6 +23,7 @@ export type Room = {
   status: RoomStatus;
   round: number;
   maxRounds: number;
+  questionCount?: number;
   category?: string | null;
   questions: Question[];
   questionsReady?: boolean;
@@ -76,6 +77,7 @@ export function sanitizeRoom(room: Room) {
     status: room.status,
     round: room.round,
     maxRounds: room.maxRounds,
+    questionCount: room.questionCount ?? room.maxRounds,
     category: room.category ?? null,
     questionsReady: Boolean(room.questionsReady),
     questionEndsAt: room.questionEndsAt,
@@ -112,6 +114,7 @@ export async function createRoom(name: string, socketId?: string) {
     status: "lobby",
     round: 0,
     maxRounds: 5,
+    questionCount: 5,
     category: null,
     questions: [],
     questionsReady: false,
@@ -186,7 +189,7 @@ export async function joinRoom(code: string, name: string, socketId?: string) {
   return { room: result };
 }
 
-export async function generateQuestionsForRoom(code: string, hostId: string, category: string) {
+export async function generateQuestionsForRoom(code: string, hostId: string, category: string, questionCount: number) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
@@ -202,7 +205,8 @@ export async function generateQuestionsForRoom(code: string, hostId: string, cat
     return { error: "Kategori wajib diisi.", status: 400 as const };
   }
 
-  const questions = await generateTriviaQuestions(category.trim());
+  const safeQuestionCount = Number.isFinite(questionCount) ? Math.min(20, Math.max(3, Math.floor(questionCount))) : 5;
+  const questions = await generateTriviaQuestions(category.trim(), safeQuestionCount);
   const updatedRoom = await collection.findOneAndUpdate(
     { code },
     {
@@ -210,6 +214,7 @@ export async function generateQuestionsForRoom(code: string, hostId: string, cat
         category: category.trim(),
         questions,
         maxRounds: questions.length,
+        questionCount: questions.length,
         questionsReady: true,
         updatedAt: new Date(),
       },
@@ -393,7 +398,7 @@ export async function goToNextQuestion(code: string) {
   return updatedRoom;
 }
 
-export async function restartRoomWithCategory(code: string, hostId: string, category: string) {
+export async function restartRoomWithCategory(code: string, hostId: string, category: string, questionCount: number) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
@@ -409,7 +414,8 @@ export async function restartRoomWithCategory(code: string, hostId: string, cate
     return { error: "Kategori wajib diisi.", status: 400 as const };
   }
 
-  const questions = await generateTriviaQuestions(category.trim());
+  const safeQuestionCount = Number.isFinite(questionCount) ? Math.min(20, Math.max(3, Math.floor(questionCount))) : 5;
+  const questions = await generateTriviaQuestions(category.trim(), safeQuestionCount);
   const players = room.players.map((player) => ({
     ...player,
     score: 0,
@@ -428,6 +434,7 @@ export async function restartRoomWithCategory(code: string, hostId: string, cate
         questions,
         questionsReady: true,
         maxRounds: questions.length,
+        questionCount: questions.length,
         status: "lobby",
         round: 0,
         currentQuestionIndex: 0,
