@@ -6,21 +6,17 @@ type GlobalWithMongo = typeof globalThis & {
 
 const globalWithMongo = globalThis as GlobalWithMongo;
 
-function createClientPromise() {
-  const uri = process.env.MONGODB_URI;
+export default function getMongoClientPromise() {
+  if (!globalWithMongo._mongoClientPromise) {
+    const uri = process.env.MONGODB_URI;
 
-  if (!uri) {
-    throw new Error("MONGODB_URI belum diset.");
+    if (!uri) {
+      throw new Error("MONGODB_URI belum diset.");
+    }
+
+    const client = new MongoClient(uri);
+    globalWithMongo._mongoClientPromise = client.connect();
   }
 
-  const client = new MongoClient(uri);
-  return client.connect();
+  return globalWithMongo._mongoClientPromise;
 }
-
-const clientPromise = globalWithMongo._mongoClientPromise ?? createClientPromise();
-
-if (process.env.NODE_ENV !== "production") {
-  globalWithMongo._mongoClientPromise = clientPromise;
-}
-
-export default clientPromise;

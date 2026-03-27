@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import clientPromise from "@/lib/mongodb";
+import getMongoClientPromise from "@/lib/mongodb";
 import { QUESTIONS } from "@/lib/questions";
 
 export type Player = {
@@ -40,7 +40,7 @@ function escapeRegex(text: string) {
 }
 
 async function getCollection() {
-  const client = await clientPromise;
+  const client = await getMongoClientPromise();
   const db = client.db(DB_NAME);
   const collection = db.collection<Room>(COLLECTION_NAME);
 
