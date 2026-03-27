@@ -23,6 +23,8 @@ export type Room = {
   maxRounds: number;
   questionEndsAt: number | null;
   currentQuestionIndex: number;
+  lastCorrectAnswer?: string | null;
+  leaderboardEndsAt?: number | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -57,15 +59,18 @@ export function sanitizeRoom(room: Room) {
     code: room.code,
     hostId: room.hostId,
     players: room.players
-      .map(({ answer, answeredAt, socketId, ...player }) => ({
+      .map(({ answeredAt, socketId, ...player }) => ({
         ...player,
-        hasAnswered: Boolean(answer),
+        hasAnswered: Boolean(player.answer),
+        isCorrect: room.status !== "lobby" && player.answer ? player.answer === (currentQuestion?.answer ?? room.lastCorrectAnswer) : false,
       }))
       .sort((a, b) => b.score - a.score),
     status: room.status,
     round: room.round,
     maxRounds: room.maxRounds,
     questionEndsAt: room.questionEndsAt,
+    leaderboardEndsAt: room.leaderboardEndsAt ?? null,
+    lastCorrectAnswer: room.lastCorrectAnswer ?? null,
     currentQuestion:
       room.status === "question" && currentQuestion
         ? {
@@ -98,6 +103,8 @@ export async function createRoom(name: string, socketId?: string) {
     maxRounds: 5,
     questionEndsAt: null,
     currentQuestionIndex: 0,
+    lastCorrectAnswer: null,
+    leaderboardEndsAt: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -185,6 +192,8 @@ async function startPreparedRoom(code: string) {
         round: 1,
         currentQuestionIndex: 0,
         questionEndsAt: Date.now() + 15000,
+        lastCorrectAnswer: null,
+        leaderboardEndsAt: null,
         updatedAt: new Date(),
       },
     },
@@ -301,6 +310,8 @@ export async function advanceRoomToLeaderboard(code: string) {
         players,
         status: nextStatus,
         questionEndsAt: null,
+        lastCorrectAnswer: question.answer,
+        leaderboardEndsAt: nextStatus === "leaderboard" ? Date.now() + 5000 : null,
         updatedAt: new Date(),
       },
     },
@@ -321,7 +332,7 @@ export async function goToNextQuestion(code: string) {
   if (room.round >= room.maxRounds) {
     const finishedRoom = await collection.findOneAndUpdate(
       { code },
-      { $set: { status: "finished", questionEndsAt: null, updatedAt: new Date() } },
+      { $set: { status: "finished", questionEndsAt: null, leaderboardEndsAt: null, updatedAt: new Date() } },
       { returnDocument: "after" }
     );
     return finishedRoom;
@@ -343,6 +354,8 @@ export async function goToNextQuestion(code: string) {
         round: room.round + 1,
         currentQuestionIndex: (room.currentQuestionIndex + 1) % QUESTIONS.length,
         questionEndsAt: Date.now() + 15000,
+        leaderboardEndsAt: null,
+        lastCorrectAnswer: null,
         updatedAt: new Date(),
       },
     },

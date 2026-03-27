@@ -7,6 +7,8 @@ type Player = {
   name: string;
   score: number;
   hasAnswered?: boolean;
+  isCorrect?: boolean;
+  answer?: string;
 };
 
 type CurrentQuestion = {
@@ -24,6 +26,8 @@ type RoomState = {
   round: number;
   maxRounds: number;
   questionEndsAt: number | null;
+  leaderboardEndsAt?: number | null;
+  lastCorrectAnswer?: string | null;
   currentQuestion: CurrentQuestion | null;
 };
 
@@ -53,7 +57,7 @@ export default function Home() {
       } catch {
         // no-op
       }
-    }, 1500);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [room?.code]);
@@ -298,7 +302,8 @@ export default function Home() {
 
                 {room.status === "leaderboard" ? (
                   <div className="rounded-3xl border border-amber-300/20 bg-amber-400/10 p-4 text-sm text-amber-100">
-                    Menampilkan leaderboard ronde ini. Soal berikutnya akan mulai otomatis.
+                    <p>Jawaban benar: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
+                    <p className="mt-2">Menampilkan leaderboard ronde ini. Soal berikutnya akan mulai otomatis.</p>
                   </div>
                 ) : null}
 
@@ -340,7 +345,7 @@ export default function Home() {
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-black text-cyan-200">{player.score}</p>
-                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">{player.hasAnswered ? "answered" : "waiting"}</p>
+                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? "correct" : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
                   </div>
                 </div>
               )) : (
