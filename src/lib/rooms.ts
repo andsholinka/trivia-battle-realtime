@@ -163,17 +163,12 @@ export async function joinRoom(code: string, name: string, socketId?: string) {
   return { room: result };
 }
 
-export async function startRoom(code: string, hostSocketId: string) {
+async function startPreparedRoom(code: string) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
   if (!room) {
     return { error: "Room tidak ditemukan.", status: 404 as const };
-  }
-
-  const hostPlayer = room.players.find((player) => player.id === room.hostId);
-  if (!hostPlayer || hostPlayer.socketId !== hostSocketId) {
-    return { error: "Hanya host yang bisa memulai game.", status: 403 as const };
   }
 
   if (room.players.length < 2) {
@@ -199,17 +194,50 @@ export async function startRoom(code: string, hostSocketId: string) {
   return { room: updatedRoom };
 }
 
-export async function submitAnswer(code: string, socketId: string, answer: string) {
+export async function startRoom(code: string, hostSocketId: string) {
+  const room = await getRoom(code);
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  const hostPlayer = room.players.find((player) => player.id === room.hostId);
+  if (!hostPlayer || hostPlayer.socketId !== hostSocketId) {
+    return { error: "Hanya host yang bisa memulai game.", status: 403 as const };
+  }
+
+  return startPreparedRoom(code);
+}
+
+export async function startRoomByHostId(code: string, hostId: string) {
+  const room = await getRoom(code);
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa memulai game.", status: 403 as const };
+  }
+
+  return startPreparedRoom(code);
+}
+
+async function submitPreparedAnswer(code: string, playerMatcher: (player: Player) => boolean, answer: string) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
-  if (!room || room.status !== "question") {
-    return { room: null };
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
   }
 
-  const playerIndex = room.players.findIndex((player) => player.socketId === socketId);
+  if (room.status !== "question") {
+    return { error: "Pertanyaan belum aktif.", status: 400 as const };
+  }
+
+  const playerIndex = room.players.findIndex(playerMatcher);
   if (playerIndex === -1) {
-    return { room };
+    return { error: "Pemain tidak ditemukan.", status: 404 as const };
   }
 
   const player = room.players[playerIndex];
@@ -233,6 +261,14 @@ export async function submitAnswer(code: string, socketId: string, answer: strin
   );
 
   return { room: updatedRoom };
+}
+
+export async function submitAnswer(code: string, socketId: string, answer: string) {
+  return submitPreparedAnswer(code, (player) => player.socketId === socketId, answer);
+}
+
+export async function submitAnswerByPlayerId(code: string, playerId: string, answer: string) {
+  return submitPreparedAnswer(code, (player) => player.id === playerId, answer);
 }
 
 export async function advanceRoomToLeaderboard(code: string) {
