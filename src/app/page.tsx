@@ -9,6 +9,7 @@ type Player = {
   hasAnswered?: boolean;
   isCorrect?: boolean;
   answer?: string;
+  lastEarnedPoints?: number;
 };
 
 type CurrentQuestion = {
@@ -42,6 +43,9 @@ export default function Home() {
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [category, setCategory] = useState("");
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  const [showResultFx, setShowResultFx] = useState(false);
 
   useEffect(() => {
     if (!room?.code) return;
@@ -63,6 +67,19 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [room?.code]);
+
+  useEffect(() => {
+    if (!room?.code || !room || !currentPlayerId) return;
+    if (!room || room.status !== "lobby") return;
+
+    fetch(`/api/rooms/${room.code}/qr`, { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        setQrCode(data.dataUrl ?? null);
+        setJoinUrl(data.joinUrl ?? null);
+      })
+      .catch(() => null);
+  }, [room?.code, room?.status, currentPlayerId]);
 
   useEffect(() => {
     const deadline = room?.status === "question" ? room.questionEndsAt : room?.status === "leaderboard" ? room.leaderboardEndsAt ?? null : null;
@@ -87,6 +104,14 @@ export default function Home() {
       setSelectedAnswer(null);
     }
   }, [room?.status, room?.currentQuestion?.id]);
+
+  useEffect(() => {
+    if (room?.status === "leaderboard") {
+      setShowResultFx(true);
+      const timeout = setTimeout(() => setShowResultFx(false), 1800);
+      return () => clearTimeout(timeout);
+    }
+  }, [room?.status, room?.round]);
 
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
   const me = room?.players.find((player) => player.id === currentPlayerId) ?? null;
@@ -215,58 +240,26 @@ export default function Home() {
               {room ? `Room ${room.code}` : "Masuk ke arena kuis"}
             </h2>
             <p className="mt-4 text-sm leading-7 text-white/65">
-              Host menentukan kategori, lalu AI Gemini akan membuat 5 soal untuk semua pemain dalam room yang sama.
+              Host menentukan kategori, lalu AI Gemini membuat 5 soal untuk semua pemain dalam room yang sama.
             </p>
 
             {!room ? (
-              <form
-                className="mt-6 space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  createRoom();
-                }}
-              >
-                <input
-                  value={nickname}
-                  onChange={(e) => {
-                    setNickname(e.target.value);
-                    if (error) setError("");
-                  }}
-                  autoCapitalize="words"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder="Masukkan nickname"
-                  className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50"
-                />
-                <input
-                  value={roomCodeInput}
-                  onChange={(e) => {
-                    setRoomCodeInput(e.target.value.toUpperCase());
-                    if (error) setError("");
-                  }}
-                  autoCapitalize="characters"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder="Kode room (untuk join)"
-                  className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50"
-                />
+              <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); createRoom(); }}>
+                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Masukkan nickname" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                <input value={roomCodeInput} onChange={(e) => { setRoomCodeInput(e.target.value.toUpperCase()); if (error) setError(""); }} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Kode room (untuk join)" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50" />
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <button type="submit" disabled={loading} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">
-                    {loading ? "Loading..." : "Create Room"}
-                  </button>
-                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">
-                    {loading ? "Loading..." : "Join Room"}
-                  </button>
+                  <button type="submit" disabled={loading} className="rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button>
+                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Join Room"}</button>
                 </div>
               </form>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">
-                  Room berhasil dibuat / dimasuki.
-                </div>
+                <div className="rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">Room berhasil dibuat / dimasuki.</div>
                 <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
                   <p className="text-xs uppercase tracking-[0.28em] text-white/45">Kode Room</p>
                   <p className="mt-2 text-3xl font-black tracking-[0.25em] text-white">{room.code}</p>
+                  {amIHost && qrCode ? <img src={qrCode} alt="QR Join Room" className="mt-4 w-44 rounded-2xl border border-white/10 bg-white/5 p-2" /> : null}
+                  {amIHost && joinUrl ? <p className="mt-3 break-all text-xs text-cyan-100/80">{joinUrl}</p> : null}
                 </div>
                 <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
                   <p className="text-xs uppercase tracking-[0.28em] text-white/45">Status</p>
@@ -277,21 +270,8 @@ export default function Home() {
 
                 {room.status === "lobby" && amIHost ? (
                   <div className="space-y-3">
-                    <input
-                      value={category}
-                      onChange={(e) => {
-                        setCategory(e.target.value);
-                        if (error) setError("");
-                      }}
-                      autoCapitalize="sentences"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      placeholder="Tentukan kategori soal, misal: sepak bola, anime, sejarah Indonesia"
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50"
-                    />
-                    <button type="button" onClick={startGame} disabled={loading || room.players.length < 2} className="w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">
-                      {loading ? "Generating..." : "Start Game"}
-                    </button>
+                    <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Tentukan kategori soal, misal: sepak bola, anime, sejarah Indonesia" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                    <button type="button" onClick={startGame} disabled={loading || room.players.length < 2} className="w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Generating..." : "Start Game"}</button>
                   </div>
                 ) : null}
 
@@ -306,17 +286,7 @@ export default function Home() {
                       {room.currentQuestion.options.map((option) => {
                         const disabled = Boolean(selectedAnswer || me?.hasAnswered);
                         const active = selectedAnswer === option;
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            disabled={disabled}
-                            onClick={() => submitAnswer(option)}
-                            className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${active ? "border-emerald-300 bg-emerald-400/20 text-emerald-100" : "border-white/10 bg-black/20 text-white"} disabled:opacity-70`}
-                          >
-                            {option}
-                          </button>
-                        );
+                        return <button key={option} type="button" disabled={disabled} onClick={() => submitAnswer(option)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${active ? "border-emerald-300 bg-emerald-400/20 text-emerald-100" : "border-white/10 bg-black/20 text-white"} disabled:opacity-70`}>{option}</button>;
                       })}
                     </div>
                     {me?.hasAnswered ? <p className="mt-3 text-sm text-emerald-100">Jawaban sudah dikirim.</p> : null}
@@ -324,25 +294,19 @@ export default function Home() {
                 ) : null}
 
                 {room.status === "leaderboard" ? (
-                  <div className="rounded-3xl border border-amber-300/20 bg-amber-400/10 p-4 text-sm text-amber-100">
-                    <p>Jawaban benar: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
+                  <div className={`rounded-3xl border border-amber-300/20 bg-amber-400/10 p-4 text-sm text-amber-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(251,191,36,0.35)]" : ""}`}>
+                    <p className="text-base font-black">{me?.isCorrect ? "✅ Jawaban kamu benar!" : me?.hasAnswered ? "❌ Jawaban kamu salah." : "⏰ Kamu belum menjawab."}</p>
+                    <p className="mt-2">Jawaban benar: <span className="font-bold">{room.lastCorrectAnswer ?? "-"}</span></p>
+                    <p className="mt-1">Poin kamu ronde ini: <span className="font-bold">+{me?.lastEarnedPoints ?? 0}</span></p>
                     <p className="mt-2">Soal berikutnya akan mulai otomatis dalam {timeLeft}s.</p>
                   </div>
                 ) : null}
 
-                {room.status === "finished" ? (
-                  <div className="rounded-3xl border border-fuchsia-300/20 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-100">
-                    Game selesai.
-                  </div>
-                ) : null}
+                {room.status === "finished" ? <div className="rounded-3xl border border-fuchsia-300/20 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-100">Game selesai.</div> : null}
               </div>
             )}
 
-            {error ? (
-              <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
-                {error}
-              </div>
-            ) : null}
+            {error ? <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
           </section>
 
           <section className="rounded-[2rem] border border-white/10 bg-white/7 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
@@ -358,9 +322,7 @@ export default function Home() {
               {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => (
                 <div key={player.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-sm font-black text-white">
-                      #{index + 1}
-                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-sm font-black text-white">#{index + 1}</div>
                     <div>
                       <p className="font-bold text-white">{player.name}</p>
                       <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
@@ -368,14 +330,10 @@ export default function Home() {
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-black text-cyan-200">{player.score}</p>
-                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? "correct" : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
+                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? `+${player.lastEarnedPoints ?? 0} correct` : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
                   </div>
                 </div>
-              )) : (
-                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-8 text-center text-sm text-white/45">
-                  Belum ada pemain di room.
-                </div>
-              )}
+              )) : <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-8 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
             </div>
           </section>
         </div>

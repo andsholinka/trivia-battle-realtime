@@ -11,6 +11,7 @@ export type Player = {
   answer?: string;
   answeredAt?: number;
   socketId?: string;
+  lastEarnedPoints?: number;
 };
 
 export type RoomStatus = "lobby" | "question" | "leaderboard" | "finished";
@@ -66,6 +67,7 @@ export function sanitizeRoom(room: Room) {
         ...player,
         hasAnswered: Boolean(player.answer),
         isCorrect: room.status !== "lobby" && player.answer ? player.answer === (currentQuestion?.answer ?? room.lastCorrectAnswer) : false,
+        lastEarnedPoints: player.lastEarnedPoints ?? 0,
       }))
       .sort((a, b) => b.score - a.score),
     status: room.status,
@@ -101,7 +103,7 @@ export async function createRoom(name: string, socketId?: string) {
   const room: Room = {
     code,
     hostId,
-    players: [{ id: hostId, name, score: 0, hasAnswered: false, socketId }],
+    players: [{ id: hostId, name, score: 0, hasAnswered: false, socketId, lastEarnedPoints: 0 }],
     status: "lobby",
     round: 0,
     maxRounds: 5,
@@ -147,6 +149,7 @@ export async function joinRoom(code: string, name: string, socketId?: string) {
     score: 0,
     hasAnswered: false,
     socketId,
+    lastEarnedPoints: 0,
   };
 
   const result = await collection.findOneAndUpdate(
@@ -189,7 +192,7 @@ async function startPreparedRoom(code: string, category: string) {
   }
 
   const questions = await generateTriviaQuestions(category);
-  const players = room.players.map((player) => ({ ...player, answer: undefined, answeredAt: undefined, hasAnswered: false }));
+  const players = room.players.map((player) => ({ ...player, answer: undefined, answeredAt: undefined, hasAnswered: false, lastEarnedPoints: 0 }));
   const updatedRoom = await collection.findOneAndUpdate(
     { code },
     {
@@ -295,10 +298,14 @@ export async function advanceRoomToLeaderboard(code: string) {
       return {
         ...player,
         score: player.score + speedBonus,
+        lastEarnedPoints: speedBonus,
       };
     }
 
-    return player;
+    return {
+      ...player,
+      lastEarnedPoints: 0,
+    };
   });
 
   const nextStatus = room.round >= room.maxRounds ? "finished" : "leaderboard";
@@ -342,6 +349,7 @@ export async function goToNextQuestion(code: string) {
     answer: undefined,
     answeredAt: undefined,
     hasAnswered: false,
+    lastEarnedPoints: 0,
   }));
 
   const updatedRoom = await collection.findOneAndUpdate(
