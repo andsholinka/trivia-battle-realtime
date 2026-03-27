@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 
 type Player = {
   id: string;
@@ -33,6 +34,39 @@ export default function Home() {
   const [room, setRoom] = useState<RoomState | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    fetch("/api/socket").catch(() => null);
+
+    const socket = io({
+      path: "/api/socket/io",
+      addTrailingSlash: false,
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("room:update", (nextRoom: RoomState) => {
+      setRoom(nextRoom);
+    });
+
+    socket.on("room:joined", (nextRoom: RoomState) => {
+      setRoom(nextRoom);
+      setError("");
+      setLoading(false);
+    });
+
+    socket.on("room:error", (message: string) => {
+      setError(message);
+      setLoading(false);
+    });
+
+    socketRef.current = socket;
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, []);
 
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
 
@@ -46,17 +80,9 @@ export default function Home() {
     try {
       setLoading(true);
       setError("");
-      const response = await fetch("/api/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create", name: safeNickname }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal membuat room.");
-      setRoom(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat room.");
-    } finally {
+      socketRef.current?.emit("room:create", { name: safeNickname });
+    } catch {
+      setError("Gagal membuat room.");
       setLoading(false);
     }
   };
@@ -72,17 +98,9 @@ export default function Home() {
     try {
       setLoading(true);
       setError("");
-      const response = await fetch("/api/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "join", name: safeNickname, code: safeRoomCode }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Gagal join room.");
-      setRoom(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal join room.");
-    } finally {
+      socketRef.current?.emit("room:join", { name: safeNickname, code: safeRoomCode });
+    } catch {
+      setError("Gagal join room.");
       setLoading(false);
     }
   };
@@ -99,7 +117,7 @@ export default function Home() {
             <h1 className="text-lg font-black tracking-tight text-white md:text-xl">Trivia Battle Real-Time</h1>
           </div>
           <div className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-100">
-            Lobby Fix Mode
+            Lobby Realtime Mode
           </div>
         </header>
 
@@ -110,7 +128,7 @@ export default function Home() {
               {room ? `Room ${room.code}` : "Masuk ke arena kuis"}
             </h2>
             <p className="mt-4 text-sm leading-7 text-white/65">
-              Saya sedang fokus memastikan create/join room stabil dulu di HP. Setelah lobby solid, realtime gameplay akan saya sambungkan penuh lagi.
+              Lobby sekarang sudah realtime. Saat pemain lain join, host akan ikut ter-update otomatis.
             </p>
 
             {!room ? (
@@ -150,7 +168,7 @@ export default function Home() {
                     {loading ? "Loading..." : "Create Room"}
                   </button>
                   <button type="button" disabled={loading} onClick={joinRoom} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">
-                    Join Room
+                    {loading ? "Loading..." : "Join Room"}
                   </button>
                 </div>
               </form>
