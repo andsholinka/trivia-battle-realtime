@@ -471,32 +471,34 @@ export default function Home() {
             {error ? <div className="mt-4 rounded-3xl border border-rose-300/20 bg-rose-400/10 px-5 py-4 text-sm text-rose-100">{error}</div> : null}
           </section>
 
-          <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Leaderboard</p>
-                <h3 className="mt-2 text-2xl font-black text-white">Pemain di Room</h3>
+          {room ? (
+            <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Leaderboard</p>
+                  <h3 className="mt-2 text-2xl font-black text-white">Pemain di Room</h3>
+                </div>
+                <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room.players.length} pemain</div>
               </div>
-              <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room ? `${room.players.length} pemain` : "0 pemain"}</div>
-            </div>
-            <div className="mt-5 space-y-3">
-              {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => (
-                <div key={player.id} className={`flex items-center justify-between rounded-3xl border px-4 py-4 ${index === 0 ? "border-yellow-300/30 bg-yellow-400/10" : index === 1 ? "border-slate-300/20 bg-slate-300/10" : index === 2 ? "border-amber-700/30 bg-amber-700/10" : "border-white/10 bg-black/20"}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-base font-black text-white">#{index + 1}</div>
-                    <div>
-                      <p className="font-black text-white">{player.name}</p>
-                      <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
+              <div className="mt-5 space-y-3">
+                {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => (
+                  <div key={player.id} className={`flex items-center justify-between rounded-3xl border px-4 py-4 ${index === 0 ? "border-yellow-300/30 bg-yellow-400/10" : index === 1 ? "border-slate-300/20 bg-slate-300/10" : index === 2 ? "border-amber-700/30 bg-amber-700/10" : "border-white/10 bg-black/20"}`}>
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-base font-black text-white">#{index + 1}</div>
+                      <div>
+                        <p className="font-black text-white">{player.name}</p>
+                        <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-black text-cyan-200">{player.score}</p>
+                      <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? `+${player.lastEarnedPoints ?? 0} correct` : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xl font-black text-cyan-200">{player.score}</p>
-                    <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? `+${player.lastEarnedPoints ?? 0} correct` : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
-                  </div>
-                </div>
-              )) : <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
-            </div>
-          </section>
+                )) : <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
     </main>
