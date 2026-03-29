@@ -504,19 +504,16 @@ export default function Home() {
           <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby</p>
                 <div>
-                <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
-                <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy! 🎯</p>
-                <h2 className="mt-2 text-xl font-black leading-none md:text-3xl">{room ? `Room ${room.code}` : "Quiz Battle"}</h2>
+                {!room ? (
+                  <>
+                    <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
+                    <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy!</p>
+                  </>
+                ) : null}
+                <h2 className="mt-2 text-xl font-black leading-none md:text-3xl">{room ? `Room ${room.code}` : ""}</h2>
               </div>
               </div>
-              {room ? (
-                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Status</p>
-                  <p className="mt-1 text-sm font-black text-cyan-100">{room.status.toUpperCase()}</p>
-                </div>
-              ) : null}
             </div>
 
             {!room ? (
@@ -844,7 +841,7 @@ export default function Home() {
                         </div>
                         <div>
                           <p className="font-black text-white">{player.name}</p>
-                          <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "🎯 Host" : "🎮 Player"}</p>
+                          <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
                         </div>
                       </div>
                       <div className="text-right">
