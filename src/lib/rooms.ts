@@ -295,7 +295,11 @@ async function submitPreparedAnswer(code: string, playerId: string, answer: stri
       arrayFilters: [
         { 
           "p.id": playerId,
-          "p.answer": { $exists: false }  // Hanya update jika belum ada jawaban
+          $or: [
+            { "p.answer": { $exists: false } },
+            { "p.answer": null },
+            { "p.answer": "" }
+          ]  // Hanya update jika belum ada jawaban (field tidak ada, null, atau empty string)
         }
       ]
     }
@@ -315,7 +319,7 @@ async function submitPreparedAnswer(code: string, playerId: string, answer: stri
     if (!player) {
       return { error: "Pemain tidak ditemukan.", status: 404 as const };
     }
-    if (player.answer) {
+    if (player.answer || player.hasAnswered) {
       // Sudah menjawab sebelumnya, return room tanpa error
       return { room: currentRoom };
     }
