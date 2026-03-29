@@ -170,7 +170,7 @@ export default function Home() {
   const createRoom = async () => {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
     if (!safeNickname) {
-      setError("Masukkan nickname dulu.");
+      setError("Masukkan nama pemain dulu.");
       return;
     }
 
@@ -202,7 +202,7 @@ export default function Home() {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
     const safeRoomCode = effectiveRoomCode.replace(/\s+/g, "").trim().toUpperCase();
     if (!safeNickname || !safeRoomCode) {
-      setError("Nickname dan kode room wajib diisi.");
+      setError("Nama pemain dan kode room wajib diisi.");
       return;
     }
 
