@@ -337,7 +337,7 @@ export default function Home() {
                 <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby</p>
                 <div>
                 <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-4xl font-black leading-none text-transparent md:text-6xl">Quizzy</h1>
-                <p className="mt-1 text-sm font-bold italic text-yellow-300 md:text-base">Get Bizzy or be dizzy 🎯</p>
+                <p className="mt-1 text-sm font-bold italic text-yellow-300 md:text-base">Get Bizzy or Be Dizzy! 🎯</p>
                 <h2 className="mt-3 text-2xl font-black leading-none md:text-4xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Join ${scannedRoomCode}` : "Quiz Battle"}</h2>
               </div>
               </div>

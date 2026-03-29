@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quizzy - Get Bizzy or be dizzy",
+  title: "Quizzy - Get Bizzy or Be Dizzy!",
   description: "Game quiz multiplayer seru dan penuh warna! Get Bizzy or Be Dizzy! 🎉",
 };
 
