@@ -276,9 +276,9 @@ export default function AdminPage() {
   const StatusBadge = ({ status }: { status: Room["status"] }) => {
     const cfg = getStatusConfig(status);
     return (
-      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.border} border`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot} ${(cfg as any).pulse ? "animate-pulse" : ""}`} />
-        <span className={`text-[10px] font-bold tracking-wider ${cfg.text}`}>{cfg.label}</span>
+      <div className={`inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${cfg.bg} ${cfg.border} border shrink-0`}>
+        <span className={`h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full ${cfg.dot} ${(cfg as any).pulse ? "animate-pulse" : ""}`} />
+        <span className={`text-[9px] sm:text-[10px] font-bold tracking-wider ${cfg.text}`}>{cfg.label}</span>
       </div>
     );
   };
@@ -293,15 +293,15 @@ export default function AdminPage() {
     };
     const style = colorStyles[color];
     return (
-      <div className={`group relative overflow-hidden rounded-2xl border ${style.border} bg-gradient-to-br ${style.from} ${style.to} p-5 backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-2xl`}>
+      <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${style.border} bg-gradient-to-br ${style.from} ${style.to} p-3 sm:p-5 backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-2xl`}>
         <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/5 transition-transform group-hover:scale-150" />
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-white/50">{label}</p>
-            <p className={`mt-2 text-4xl font-black ${style.text}`}>{value}</p>
-            {subtext && <p className="mt-1 text-xs text-white/40">{subtext}</p>}
+        <div className="relative flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-white/50 truncate">{label}</p>
+            <p className={`mt-1 sm:mt-2 text-2xl sm:text-4xl font-black ${style.text}`}>{value}</p>
+            {subtext && <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-white/40">{subtext}</p>}
           </div>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${style.iconBg}`}>
+          <div className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl ${style.iconBg}`}>
             {icon}
           </div>
         </div>
@@ -371,36 +371,38 @@ export default function AdminPage() {
     <main className="min-h-screen bg-[#0a0f1c] text-slate-200">
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 border-b border-slate-800/60 bg-[#0a0f1c]/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-4 lg:px-8">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20">
               <Icons.Dashboard />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">Admin Console</h1>
-              <p className="text-[10px] text-slate-500">Trivia Battle Realtime</p>
+              <h1 className="text-sm sm:text-lg font-bold text-white">Admin Console</h1>
+              <p className="hidden sm:block text-[10px] text-slate-500">Trivia Battle Realtime</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={fetchRooms}
-              className="group flex items-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/50 px-4 py-2 text-sm font-medium text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+              className="group flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-slate-700/50 bg-slate-800/50 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+              aria-label="Refresh"
             >
               <span className="transition-transform group-hover:rotate-180"><Icons.Refresh /></span>
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
               onClick={logout}
-              className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-400 transition-all hover:bg-rose-500/20 hover:text-rose-300"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-rose-500/20 bg-rose-500/10 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-rose-400 transition-all hover:bg-rose-500/20 hover:text-rose-300"
+              aria-label="Logout"
             >
               <Icons.Logout />
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+      <section className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-8 lg:px-8">
         {/* Stats Grid */}
         {stats && (
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -443,11 +445,11 @@ export default function AdminPage() {
         )}
 
         {/* Rooms Section */}
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/50">
+        <div className="rounded-xl sm:rounded-2xl border border-slate-800/60 bg-slate-900/50">
           {/* Rooms Header */}
-          <div className="flex items-center justify-between border-b border-slate-800/60 px-5 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/60 px-3 sm:px-5 py-3 sm:py-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-white">Game Rooms</h2>
+              <h2 className="text-base sm:text-lg font-bold text-white">Game Rooms</h2>
               <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-medium text-slate-400">
                 {rooms.length}
               </span>
@@ -455,42 +457,44 @@ export default function AdminPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={selectAll}
-                className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+                className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
               >
-                {selectedRooms.size === rooms.length && rooms.length > 0 ? "Deselect All" : "Select All"}
+                {selectedRooms.size === rooms.length && rooms.length > 0 ? "Deselect" : "Select All"}
               </button>
               {selectedRooms.size > 0 && (
                 <button
                   onClick={deleteSelectedRooms}
                   disabled={deleteLoading}
-                  className="flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-400 transition-all hover:bg-rose-500/20 disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-rose-400 transition-all hover:bg-rose-500/20 disabled:opacity-50"
                 >
                   <Icons.Trash />
-                  {deleteLoading ? "Deleting..." : `Delete (${selectedRooms.size})`}
+                  <span className="hidden sm:inline">{deleteLoading ? "Deleting..." : "Delete "}</span>
+                  <span className="sm:hidden">{deleteLoading ? "..." : ""}</span>
+                  ({selectedRooms.size})
                 </button>
               )}
             </div>
           </div>
 
           {rooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-            <div className="rounded-2xl border border-slate-800/60 bg-slate-800/30 p-6">
+          <div className="flex flex-col items-center justify-center gap-4 py-16 sm:py-20 text-center px-4">
+            <div className="rounded-2xl border border-slate-800/60 bg-slate-800/30 p-5 sm:p-6">
               <Icons.Rooms />
             </div>
             <div>
-              <p className="text-lg font-semibold text-slate-300">No active rooms</p>
-              <p className="mt-1 text-sm text-slate-500">Rooms will appear here when created</p>
+              <p className="text-base sm:text-lg font-semibold text-slate-300">No active rooms</p>
+              <p className="mt-1 text-xs sm:text-sm text-slate-500">Rooms will appear here when created</p>
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 p-5 lg:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 p-3 sm:p-5 lg:grid-cols-2">
             {rooms.map((room, idx) => (
               <motion.div
                 key={room.code}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`group relative overflow-hidden rounded-2xl border p-5 transition-all hover:shadow-xl ${
+                className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition-all hover:shadow-xl ${
                   selectedRooms.has(room.code)
                     ? "border-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10"
                     : "border-slate-800/60 bg-slate-800/40 hover:border-slate-700/60 hover:bg-slate-800/60"
@@ -501,54 +505,56 @@ export default function AdminPage() {
 
                 <div className="relative">
                   {/* Header: Code, Status, Players count */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                       <input
                         type="checkbox"
                         checked={selectedRooms.has(room.code)}
                         onChange={() => toggleRoomSelection(room.code)}
-                        className="mt-1 h-4 w-4 cursor-pointer rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/20"
+                        className="mt-0.5 sm:mt-1 h-3.5 w-3.5 sm:h-4 sm:w-4 cursor-pointer rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/20 shrink-0"
                       />
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-mono font-bold text-white tracking-wider">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+                          <span className="text-base sm:text-lg font-mono font-bold text-white tracking-wider">
                             {room.code}
                           </span>
                           <StatusBadge status={room.status} />
                         </div>
-                        <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                        <p className="mt-1 flex items-center gap-1 text-[10px] sm:text-xs text-slate-500">
                           <Icons.Clock />
-                          {new Date(room.createdAt).toLocaleString("id-ID", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
+                          <span className="truncate">
+                            {new Date(room.createdAt).toLocaleString("id-ID", {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-black text-slate-200">{room.playerCount}</p>
+                    <div className="text-right shrink-0">
+                      <p className="text-xl sm:text-3xl font-black text-slate-200">{room.playerCount}</p>
                       <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Players</p>
                     </div>
                   </div>
 
                   {/* Tags row */}
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-1.5 sm:gap-2">
                     {room.category && (
-                      <span className="flex items-center gap-1 rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300">
+                      <span className="flex items-center gap-1 rounded-md sm:rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium text-indigo-300">
                         <Icons.Category />
-                        {room.category}
+                        <span className="truncate max-w-[80px] sm:max-w-none">{room.category}</span>
                       </span>
                     )}
-                    <span className="flex items-center gap-1 rounded-lg border border-slate-700/50 bg-slate-800/50 px-2.5 py-1 text-xs font-medium text-slate-400">
+                    <span className="flex items-center gap-1 rounded-md sm:rounded-lg border border-slate-700/50 bg-slate-800/50 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium text-slate-400">
                       <Icons.Target />
                       Round {room.round}/{room.maxRounds}
                     </span>
-                    <span className="flex items-center gap-1 rounded-lg border border-slate-700/50 bg-slate-800/50 px-2.5 py-1 text-xs font-medium text-slate-400">
+                    <span className="flex items-center gap-1 rounded-md sm:rounded-lg border border-slate-700/50 bg-slate-800/50 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium text-slate-400">
                       <Icons.Question />
                       Q{room.currentQuestionIndex + 1}
                     </span>
                     {room.questionsReady && (
-                      <span className="flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
+                      <span className="flex items-center gap-1 rounded-md sm:rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium text-emerald-400">
                         <Icons.Check />
                         Ready
                       </span>
@@ -557,20 +563,20 @@ export default function AdminPage() {
 
                   {/* Players list */}
                   {room.players.length > 0 && (
-                    <div className="mt-4 rounded-xl border border-slate-700/30 bg-slate-900/50 p-3">
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Players</p>
-                      <div className="flex flex-wrap gap-1.5">
+                    <div className="mt-3 sm:mt-4 rounded-lg sm:rounded-xl border border-slate-700/30 bg-slate-900/50 p-2 sm:p-3">
+                      <p className="mb-1.5 sm:mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Players</p>
+                      <div className="flex flex-wrap gap-1 sm:gap-1.5">
                         {room.players.map((player) => (
                           <span
                             key={player.id}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium ${
+                            className={`inline-flex items-center gap-1 rounded-md sm:rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium ${
                               player.hasAnswered
                                 ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
                                 : "border border-slate-600/30 bg-slate-700/30 text-slate-400"
                             }`}
                           >
                             <span className={player.hasAnswered ? "text-emerald-400" : "text-slate-500"}>●</span>
-                            {player.name}
+                            <span className="truncate max-w-[60px] sm:max-w-[100px]">{player.name}</span>
                             <span className="text-slate-500">({player.score})</span>
                           </span>
                         ))}
