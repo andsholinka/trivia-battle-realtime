@@ -330,8 +330,8 @@ export default function Home() {
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
       <section className="relative mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-6 md:px-8 lg:px-10">
-        <div className="mt-2 grid items-center gap-6 lg:grid-cols-[0.88fr_1.12fr]">
-          <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
+        <div className="mt-2 grid gap-6 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
+          <section className="flex flex-col justify-center rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby</p>
