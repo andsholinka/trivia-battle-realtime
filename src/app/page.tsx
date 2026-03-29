@@ -54,6 +54,22 @@ export default function Home() {
   const [showResultFx, setShowResultFx] = useState(false);
   const [scannedRoomCode, setScannedRoomCode] = useState("");
   const [podiumReveal, setPodiumReveal] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  // Safety: reset loading jika stuck (max 10 detik)
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => {
+      console.log("[Safety] Resetting stuck loading state");
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  // Reset copied state when joinUrl changes
+  useEffect(() => {
+    setCopied(false);
+  }, [joinUrl]);
 
   // Load saved session from localStorage on mount
   useEffect(() => {
@@ -214,6 +230,12 @@ export default function Home() {
 
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
   const me = room?.players.find((player) => player.id === currentPlayerId) ?? null;
+  // Debug: log me state when room status changes to question or leaderboard
+  useEffect(() => {
+    if (room?.status === "question" || room?.status === "leaderboard") {
+      console.log("[Debug] me state:", { me, currentPlayerId, hasAnswered: me?.hasAnswered, players: room?.players?.map(p => ({ id: p.id, name: p.name, hasAnswered: p.hasAnswered })) });
+    }
+  }, [room?.status, me, currentPlayerId, room?.players]);
   const amIHost = Boolean(room && currentPlayerId && room.hostId === currentPlayerId);
   const effectiveRoomCode = scannedRoomCode || roomCodeInput;
   const topThree = sortedPlayers.slice(0, 3);
@@ -281,8 +303,13 @@ export default function Home() {
   };
 
   const generateQuestions = async () => {
-    if (!room || !currentPlayerId) return;
+    console.log("[Generate] Clicked", { room, currentPlayerId, category, questionCount });
+    if (!room || !currentPlayerId) {
+      console.log("[Generate] Missing room or currentPlayerId");
+      return;
+    }
     if (!category.trim()) {
+      console.log("[Generate] Category empty");
       setError("Kategori wajib diisi sebelum generate pertanyaan.");
       return;
     }
@@ -290,18 +317,22 @@ export default function Home() {
     try {
       setLoading(true);
       setError("");
+      console.log("[Generate] Sending request...");
       const response = await fetch(`/api/rooms/${room.code}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hostId: currentPlayerId, category, questionCount: Number(questionCount || 5) }),
       });
       const data = await response.json();
+      console.log("[Generate] Response:", response.status, data);
       if (!response.ok) throw new Error(data.error || "Gagal generate pertanyaan.");
       setRoom(data);
     } catch (err) {
+      console.error("[Generate] Error:", err);
       setError(err instanceof Error ? err.message : "Gagal generate pertanyaan.");
     } finally {
       setLoading(false);
+      console.log("[Generate] Done, loading=false");
     }
   };
 
@@ -364,20 +395,27 @@ export default function Home() {
   };
 
   const submitAnswer = async (answer: string) => {
-    if (!room || !currentPlayerId || selectedAnswer) return;
+    console.log("[Answer] Clicked:", { answer, currentPlayerId, roomCode: room?.code });
+    if (!room || !currentPlayerId || selectedAnswer) {
+      console.log("[Answer] Blocked:", { hasRoom: !!room, hasPlayerId: !!currentPlayerId, selectedAnswer });
+      return;
+    }
 
     try {
       setSelectedAnswer(answer);
       setError("");
+      console.log("[Answer] Sending to API...");
       const response = await fetch(`/api/rooms/${room.code}/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playerId: currentPlayerId, answer }),
       });
       const data = await response.json();
+      console.log("[Answer] API response:", response.status, data);
       if (!response.ok) throw new Error(data.error || "Gagal mengirim jawaban.");
       setRoom(data);
     } catch (err) {
+      console.error("[Answer] Error:", err);
       setSelectedAnswer(null);
       setError(err instanceof Error ? err.message : "Gagal mengirim jawaban.");
     }
@@ -464,7 +502,17 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-pink-500/30 disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log("[Button] Generate clicked", { loading, playersLength: room?.players?.length });
+                          generateQuestions();
+                        }}
+                        disabled={loading || (room?.players?.length || 0) < 2}
+                        className="rounded-3xl bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-pink-500/30 disabled:opacity-60"
+                      >
+                        {loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}
+                      </button>
                       <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
                     </div>
                   </div>
@@ -483,14 +531,16 @@ export default function Home() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           if (joinUrl) {
-                            navigator.clipboard.writeText(joinUrl);
+                            await navigator.clipboard.writeText(joinUrl);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
                           }
                         }}
                         className="rounded-3xl bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-cyan-500/30 hover:scale-[1.02]"
                       >
-                        Copy Link
+                        {copied ? "Copied!" : "Copy Link"}
                       </button>
                     </div>
                     {showQR && qrCode ? (
