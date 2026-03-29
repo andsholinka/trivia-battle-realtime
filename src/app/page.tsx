@@ -586,6 +586,116 @@ export default function Home() {
                   </div>
                 ) : null}
 
+                {/* Player Lobby Showcase - Visible to ALL players in lobby */}
+                {room?.status === "lobby" && room.players.length > 0 ? (
+                  <div className="relative overflow-hidden rounded-[1.8rem] border border-cyan-300/20 bg-gradient-to-br from-slate-900/80 via-purple-900/20 to-slate-900/80 p-5 shadow-2xl shadow-cyan-500/10">
+                    {/* Animated background glow */}
+                    <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl animate-pulse"></div>
+                    <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-purple-400/20 blur-3xl animate-pulse delay-700"></div>
+                    
+                    {/* Header */}
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 shadow-lg shadow-cyan-500/30">
+                          <span className="text-xl">⚡</span>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/70">Players Ready</p>
+                          <p className="text-lg font-black text-white">{room.players.length} Pemain Bergabung</p>
+                        </div>
+                      </div>
+                      {/* Live pulse indicator */}
+                      <div className="flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1.5">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Live</span>
+                      </div>
+                    </div>
+                    
+                    {/* Players Grid */}
+                    <div className="relative mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                      {room.players.map((p, idx) => (
+                        <div
+                          key={p.id}
+                          className={`group relative overflow-hidden rounded-2xl border p-3 transition-all duration-300 hover:scale-105 ${
+                            p.id === currentPlayerId
+                              ? "border-amber-300/40 bg-gradient-to-br from-amber-400/20 via-amber-500/10 to-transparent shadow-lg shadow-amber-500/20"
+                              : p.id === room.hostId
+                                ? "border-purple-300/40 bg-gradient-to-br from-purple-400/20 via-purple-500/10 to-transparent shadow-lg shadow-purple-500/20"
+                                : "border-white/10 bg-white/5 hover:border-cyan-300/30 hover:bg-cyan-400/10"
+                          }`}
+                          style={{ animationDelay: `${idx * 100}ms` }}
+                        >
+                          {/* Avatar */}
+                          <div className="flex flex-col items-center gap-2">
+                            <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-black shadow-lg ${
+                              p.id === currentPlayerId
+                                ? "bg-gradient-to-br from-amber-300 via-orange-400 to-red-400 shadow-amber-500/30"
+                                : p.id === room.hostId
+                                  ? "bg-gradient-to-br from-purple-400 via-pink-400 to-rose-400 shadow-purple-500/30"
+                                  : "bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-500 shadow-cyan-500/30"
+                            }`}>
+                              {p.name.charAt(0).toUpperCase()}
+                              {p.id === currentPlayerId && (
+                                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400 text-[10px] shadow-lg">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-center">
+                              <p className="max-w-[80px] truncate text-sm font-bold text-white">{p.name}</p>
+                              {p.id === room.hostId && (
+                                <span className="mt-1 inline-block rounded-full bg-purple-400/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-200">
+                                  Host
+                                </span>
+                              )}
+                              {p.id === currentPlayerId && p.id !== room.hostId && (
+                                <span className="mt-1 inline-block rounded-full bg-amber-400/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-200">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Category Banner */}
+                    {room.category && (
+                      <div className="relative mt-5 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <span className="text-2xl">
+                            {room.category === "General Knowledge" && "🌍"}
+                            {room.category === "Science" && "🔬"}
+                            {room.category === "History" && "📜"}
+                            {room.category === "Sports" && "⚽"}
+                            {room.category === "Entertainment" && "🎬"}
+                            {room.category === "Geography" && "🗺️"}
+                            {!["General Knowledge", "Science", "History", "Sports", "Entertainment", "Geography"].includes(room.category) && "🎯"}
+                          </span>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/70">Kategori Pertandingan</p>
+                            <p className="text-lg font-black text-cyan-100">{room.category}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Waiting message for non-host */}
+                    {!amIHost && (
+                      <div className="relative mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                        <p className="text-sm font-medium text-white/80">
+                          <span className="mr-2 animate-bounce inline-block">⏳</span>
+                          Menunggu host memulai pertandingan...
+                        </p>
+                        <p className="mt-1 text-xs text-white/50">Siapkan dirimu!</p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
                 {amIHost && qrCode && room?.status === "lobby" ? (
                   <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Invite Players</p>
