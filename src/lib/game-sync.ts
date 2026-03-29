@@ -8,7 +8,8 @@ export async function getSyncedRoom(code: string) {
   }
 
   if (room.status === "question") {
-    const everyoneAnswered = room.players.length > 0 && room.players.every((player) => Boolean(player.answer));
+    // Gunakan hasAnswered, bukan answer (karena answer di-clear di sanitizeRoom)
+    const everyoneAnswered = room.players.length > 0 && room.players.every((player) => player.hasAnswered);
     const timeUp = typeof room.questionEndsAt === "number" && room.questionEndsAt <= Date.now();
 
     if (everyoneAnswered || timeUp) {
