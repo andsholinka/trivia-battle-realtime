@@ -560,7 +560,7 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {amIHost && qrCode ? (
+                {amIHost && qrCode && room?.status === "lobby" ? (
                   <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Invite Players</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
