@@ -595,7 +595,7 @@ export default function Home() {
                 ) : null}
 
                 {/* Player List - Only show to host in lobby */}
-                {room.status === "lobby" && amIHost ? (
+                {room?.status === "lobby" && amIHost ? (
                   <div className="rounded-[1.8rem] border border-emerald-300/20 bg-emerald-400/10 p-5">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-100">
