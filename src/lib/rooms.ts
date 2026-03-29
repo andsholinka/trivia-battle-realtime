@@ -85,6 +85,7 @@ export function sanitizeRoom(room: Room) {
     category: room.category ?? null,
     questionsReady: Boolean(room.questionsReady),
     questionEndsAt: room.questionEndsAt,
+    countdownEndsAt: room.countdownEndsAt ?? null,
     leaderboardEndsAt: room.leaderboardEndsAt ?? null,
     finalResultsEndsAt: room.finalResultsEndsAt ?? null,
     lastCorrectAnswer: room.lastCorrectAnswer ?? null,
