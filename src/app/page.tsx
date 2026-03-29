@@ -564,9 +564,9 @@ export default function Home() {
                         {room.players.map((p) => (
                           <div key={p.id} className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
                             <div className="h-6 w-6 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-xs font-bold">
-                              {p.nickname.charAt(0).toUpperCase()}
+                              {p.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-sm font-medium">{p.nickname}</span>
+                            <span className="text-sm font-medium">{p.name}</span>
                           </div>
                         ))}
                       </div>
