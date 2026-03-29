@@ -586,10 +586,64 @@ export default function Home() {
                     <p className="mt-2 text-center text-2xl font-black text-white md:text-3xl">🎉 Hasil Akhir 🎉</p>
                     <p className="mt-2 text-center">{me?.isCorrect ? "Jawaban terakhir kamu benar!" : me?.hasAnswered ? "Jawaban terakhir kamu salah." : "Kamu belum menjawab di soal terakhir."}</p>
                     <p className="mt-1 text-center">Poin terakhir: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
-                    <div className="mt-6 space-y-3">
-                      <div className={`rounded-3xl border border-amber-700/40 bg-amber-700/15 p-4 text-center transition-all duration-700 ${podiumReveal >= 1 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}><p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 3</p><p className="mt-2 text-3xl">🥉</p><p className="mt-2 font-black text-white">{third?.name ?? "-"}</p><p className="text-sm text-white/70">{third?.score ?? 0} pts</p></div>
-                      <div className={`rounded-3xl border border-slate-300/40 bg-slate-300/10 p-5 text-center transition-all duration-700 ${podiumReveal >= 2 ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}><p className="text-xs uppercase tracking-[0.3em] text-white/50">Peringkat 2</p><p className="mt-2 text-4xl">🥈</p><p className="mt-2 text-lg font-black text-white">{second?.name ?? "-"}</p><p className="text-sm text-white/70">{second?.score ?? 0} pts</p></div>
-                      <div className={`rounded-3xl border border-yellow-300/50 bg-yellow-400/15 p-6 text-center transition-all duration-700 ${podiumReveal >= 3 ? "translate-y-0 opacity-100 scale-100" : "translate-y-6 opacity-0 scale-95"}`}><p className="text-xs uppercase tracking-[0.3em] text-yellow-100/80">Peringkat 1</p><p className="mt-2 text-5xl">👑</p><p className="mt-2 text-xl font-black text-white">{first?.name ?? "-"}</p><p className="text-sm text-white/80">{first?.score ?? 0} pts</p></div>
+
+                    {/* Championship Podium */}
+                    <div className="mt-8">
+                      {/* Podium Stage */}
+                      <div className="relative flex items-end justify-center gap-2 sm:gap-3">
+                        {/* 2nd Place - Left */}
+                        <div className={`flex flex-col items-center transition-all duration-700 ${podiumReveal >= 2 ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`}>
+                          <div className="mb-3 text-center">
+                            <p className="max-w-[80px] truncate text-xs font-bold text-slate-200 sm:max-w-[100px]">{second?.name ?? "-"}</p>
+                            <p className="text-lg font-black text-slate-300">{second?.score ?? 0}</p>
+                          </div>
+                          <div className="relative">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-slate-300 to-slate-500 text-2xl shadow-lg shadow-slate-500/50 sm:h-16 sm:w-16">🥈</div>
+                            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-400 text-xs font-black text-slate-900">2</div>
+                          </div>
+                          <div className="mt-2 flex h-24 w-16 items-end justify-center rounded-t-xl bg-gradient-to-t from-slate-600/80 to-slate-400/60 shadow-[0_0_30px_rgba(148,163,184,0.4)] backdrop-blur-sm sm:h-28 sm:w-20">
+                            <span className="mb-2 text-xs font-bold text-slate-200">2nd</span>
+                          </div>
+                        </div>
+
+                        {/* 1st Place - Center (Tallest) */}
+                        <div className={`flex flex-col items-center transition-all duration-700 delay-150 ${podiumReveal >= 3 ? "translate-y-0 opacity-100 scale-100" : "translate-y-12 opacity-0 scale-95"}`}>
+                          <div className="mb-3 text-center">
+                            <p className="max-w-[90px] truncate text-sm font-bold text-yellow-200 sm:max-w-[110px]">{first?.name ?? "-"}</p>
+                            <p className="text-xl font-black text-yellow-300">{first?.score ?? 0}</p>
+                          </div>
+                          <div className="relative">
+                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-4xl shadow-[0_0_40px_rgba(251,191,36,0.6)] animate-pulse sm:h-24 sm:w-24">👑</div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-2xl">✨</div>
+                            <div className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-400 text-sm font-black text-yellow-900">1</div>
+                          </div>
+                          <div className="mt-2 flex h-36 w-20 items-end justify-center rounded-t-xl bg-gradient-to-t from-amber-600/90 via-yellow-500/70 to-yellow-300/50 shadow-[0_0_50px_rgba(251,191,36,0.5)] backdrop-blur-sm sm:h-40 sm:w-24">
+                            <span className="mb-3 text-sm font-black text-yellow-100">CHAMPION</span>
+                          </div>
+                        </div>
+
+                        {/* 3rd Place - Right */}
+                        <div className={`flex flex-col items-center transition-all duration-700 delay-75 ${podiumReveal >= 1 ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`}>
+                          <div className="mb-3 text-center">
+                            <p className="max-w-[80px] truncate text-xs font-bold text-amber-200 sm:max-w-[100px]">{third?.name ?? "-"}</p>
+                            <p className="text-lg font-black text-amber-300">{third?.score ?? 0}</p>
+                          </div>
+                          <div className="relative">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-800 text-2xl shadow-lg shadow-amber-700/50 sm:h-16 sm:w-16">🥉</div>
+                            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-xs font-black text-amber-100">3</div>
+                          </div>
+                          <div className="mt-2 flex h-20 w-16 items-end justify-center rounded-t-xl bg-gradient-to-t from-amber-800/80 to-amber-600/60 shadow-[0_0_30px_rgba(180,83,9,0.4)] backdrop-blur-sm sm:h-24 sm:w-20">
+                            <span className="mb-2 text-xs font-bold text-amber-200">3rd</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Confetti Effect Lines */}
+                      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        <div className={`absolute left-1/4 top-1/4 h-2 w-2 rounded-full bg-yellow-400 transition-all duration-1000 ${podiumReveal >= 3 ? "opacity-100" : "opacity-0"}`} style={{ animation: "confetti 2s ease-out infinite" }}></div>
+                        <div className={`absolute right-1/4 top-1/3 h-2 w-2 rounded-full bg-fuchsia-400 transition-all duration-1000 delay-200 ${podiumReveal >= 3 ? "opacity-100" : "opacity-0"}`} style={{ animation: "confetti 2s ease-out infinite 0.5s" }}></div>
+                        <div className={`absolute left-1/3 top-1/2 h-1.5 w-1.5 rounded-full bg-cyan-400 transition-all duration-1000 delay-300 ${podiumReveal >= 3 ? "opacity-100" : "opacity-0"}`} style={{ animation: "confetti 2s ease-out infinite 1s" }}></div>
+                      </div>
                     </div>
                     {amIHost ? (
                       <div className="mt-6 space-y-4">
@@ -616,27 +670,38 @@ export default function Home() {
             <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Leaderboard</p>
-                  <h3 className="mt-2 text-2xl font-black text-white">Pemain di Room</h3>
+                  <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Live Leaderboard</p>
+                  <h3 className="mt-2 text-2xl font-black text-white">Klasemen Pemain</h3>
                 </div>
                 <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room.players.length} pemain</div>
               </div>
               <div className="mt-5 space-y-3">
-                {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => (
-                  <div key={player.id} className={`flex items-center justify-between rounded-3xl border px-4 py-4 ${index === 0 ? "border-yellow-300/30 bg-yellow-400/10" : index === 1 ? "border-slate-300/20 bg-slate-300/10" : index === 2 ? "border-amber-700/30 bg-amber-700/10" : "border-white/10 bg-black/20"}`}>
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-base font-black text-white">#{index + 1}</div>
-                      <div>
-                        <p className="font-black text-white">{player.name}</p>
-                        <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
+                {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => {
+                  const rankIcons = ["👑", "🥈", "🥉"];
+                  const rankColors = [
+                    "border-yellow-300/50 bg-gradient-to-r from-yellow-500/20 to-amber-600/10 shadow-[0_0_20px_rgba(251,191,36,0.3)]",
+                    "border-slate-300/40 bg-gradient-to-r from-slate-400/20 to-slate-600/10",
+                    "border-amber-700/40 bg-gradient-to-r from-amber-600/20 to-amber-800/10"
+                  ];
+                  const isTop3 = index < 3;
+                  return (
+                    <div key={player.id} className={`flex items-center justify-between rounded-3xl border px-4 py-4 transition-all duration-300 hover:scale-[1.02] ${isTop3 ? rankColors[index] : "border-white/10 bg-black/20 hover:bg-white/5"}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-black ${isTop3 ? "bg-white/20" : "bg-white/10"}`}>
+                          {isTop3 ? rankIcons[index] : <span className="text-white/60">#{index + 1}</span>}
+                        </div>
+                        <div>
+                          <p className="font-black text-white">{player.name}</p>
+                          <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "🎯 Host" : "🎮 Player"}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-xl font-black ${isTop3 ? "text-white" : "text-cyan-200"}`}>{player.score}</p>
+                        <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? `✅ +${player.lastEarnedPoints ?? 0}` : player.hasAnswered ? "❌ wrong" : "⏰ no answer") : player.hasAnswered ? "✓ answered" : "○ waiting"}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xl font-black text-cyan-200">{player.score}</p>
-                      <p className="text-xs uppercase tracking-[0.25em] text-white/40">{room?.status === "leaderboard" || room?.status === "finished" ? (player.isCorrect ? `+${player.lastEarnedPoints ?? 0} correct` : player.hasAnswered ? "wrong" : "no answer") : player.hasAnswered ? "answered" : "waiting"}</p>
-                    </div>
-                  </div>
-                )) : <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
+                  );
+                }) : <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
               </div>
             </section>
           ) : null}
