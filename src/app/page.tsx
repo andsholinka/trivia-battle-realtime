@@ -50,6 +50,7 @@ export default function Home() {
   const [questionCount, setQuestionCount] = useState("5");
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
   const [showResultFx, setShowResultFx] = useState(false);
   const [scannedRoomCode, setScannedRoomCode] = useState("");
   const [podiumReveal, setPodiumReveal] = useState(0);
@@ -406,11 +407,33 @@ export default function Home() {
 
                 {amIHost && qrCode ? (
                   <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">QR Join Room</p>
-                    <div className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                      <img src={qrCode} alt="QR Join Room" className="w-40 rounded-3xl border border-white/10 bg-white/5 p-2" />
-                      {joinUrl ? <p className="break-all text-xs text-cyan-100/80">{joinUrl}</p> : null}
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Invite Players</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowQR(v => !v)}
+                        className="rounded-3xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15 hover:scale-[1.02]"
+                      >
+                        {showQR ? "Hide QR" : "Show QR"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (joinUrl) {
+                            navigator.clipboard.writeText(joinUrl);
+                          }
+                        }}
+                        className="rounded-3xl bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-cyan-500/30 hover:scale-[1.02]"
+                      >
+                        Copy Link
+                      </button>
                     </div>
+                    {showQR && qrCode ? (
+                      <div className="mt-4 flex flex-col items-center">
+                        <img src={qrCode} alt="QR Join Room" className="w-48 rounded-3xl border border-white/10 bg-white/5 p-2" />
+                        {joinUrl ? <p className="mt-2 break-all text-[11px] text-cyan-100/80">{joinUrl}</p> : null}
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
 
