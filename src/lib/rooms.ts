@@ -592,3 +592,48 @@ export async function kickPlayerById(code: string, playerId: string, hostId: str
 
   return { room: updatedRoom, playerName: playerToKick.name };
 }
+
+export async function returnRoomToLobby(code: string, hostId: string) {
+  const collection = await getCollection();
+  const room = await collection.findOne({ code });
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa kembali ke lobby.", status: 403 as const };
+  }
+
+  // Reset scores and game state, keep players and category
+  const players = room.players.map((player: Player) => ({
+    ...player,
+    score: 0,
+    answer: undefined,
+    answeredAt: undefined,
+    hasAnswered: false,
+    lastEarnedPoints: 0,
+  }));
+
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code },
+    {
+      $set: {
+        players,
+        status: "lobby",
+        round: 0,
+        currentQuestionIndex: 0,
+        questionEndsAt: null,
+        leaderboardEndsAt: null,
+        finalResultsEndsAt: null,
+        lastCorrectAnswer: null,
+        questionsReady: false, // Require admin to generate new questions
+        questions: [],
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return { room: updatedRoom };
+}

@@ -410,6 +410,29 @@ export default function Home() {
     setSelectedAnswer(null);
   };
 
+  const returnToLobby = async () => {
+    if (!room || !currentPlayerId) return;
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch(`/api/rooms/${room.code}/return-to-lobby`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostId: currentPlayerId }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Gagal kembali ke lobby");
+      }
+      const data = await response.json();
+      setRoom(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal kembali ke lobby");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const kickPlayer = async (playerId: string, playerName: string) => {
     if (!room || !currentPlayerId) return;
     if (!confirm(`Keluarkan "${playerName}" dari room?`)) return;
@@ -771,6 +794,7 @@ export default function Home() {
                           <div className="flex items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/70">3 - 20 soal</div>
                         </div>
                         <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
+                        <button type="button" onClick={returnToLobby} className="w-full rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white">Main Lagi</button>
                         <button type="button" onClick={leaveRoom} className="w-full rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
                       </div>
                     ) : (
