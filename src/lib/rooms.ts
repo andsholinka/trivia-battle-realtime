@@ -160,7 +160,7 @@ export async function advanceRoomToQuestion(code: string): Promise<WithId<Room> 
   return updatedRoom;
 }
 
-export async function joinRoom(code: string, name: string, socketId?: string) {
+export async function joinRoom(code: string, name: string, socketId?: string, playerId?: string) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
 
@@ -172,13 +172,34 @@ export async function joinRoom(code: string, name: string, socketId?: string) {
     return { error: "Game sudah dimulai.", status: 400 as const };
   }
 
+  // Check for reconnect with existing playerId
+  if (playerId) {
+    const existingPlayer = room.players.find((p) => p.id === playerId);
+    if (existingPlayer) {
+      // Reconnect - update socketId and return room
+      const result = await collection.findOneAndUpdate(
+        { code, "players.id": playerId },
+        {
+          $set: {
+            "players.$.socketId": socketId,
+            updatedAt: new Date(),
+          },
+        },
+        { returnDocument: "after" }
+      );
+      if (result) {
+        return { room: result };
+      }
+    }
+  }
+
   const duplicateName = room.players.some((player) => player.name.toLowerCase() === name.toLowerCase());
   if (duplicateName) {
     return { error: "Nickname sudah dipakai di room ini.", status: 400 as const };
   }
 
   const nextPlayer: Player = {
-    id: randomUUID(),
+    id: playerId || randomUUID(),
     name,
     score: 0,
     hasAnswered: false,
