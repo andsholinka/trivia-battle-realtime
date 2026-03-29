@@ -499,16 +499,16 @@ export default function Home() {
       <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
-      <section className="relative mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-6 md:px-8 lg:px-10">
-        <div className={`mt-2 grid gap-6 lg:items-start ${room ? "lg:grid-cols-[0.88fr_1.12fr]" : "lg:grid-cols-1 lg:place-items-center"}`}>
-          <section className={`flex flex-col justify-center rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6 ${room ? "" : "w-full max-w-xl lg:max-w-2xl"}`}>
+      <section className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 py-4 md:px-6 lg:px-8">
+        <div className={`mt-2 grid gap-5 lg:items-start ${room ? "lg:grid-cols-[0.85fr_1.15fr]" : "lg:grid-cols-1 lg:place-items-center"}`}>
+          <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby</p>
                 <div>
-                <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-4xl font-black leading-none text-transparent md:text-6xl">Quizzy</h1>
-                <p className="mt-1 text-sm font-bold italic text-yellow-300 md:text-base">Get Bizzy or Be Dizzy! 🎯</p>
-                <h2 className="mt-3 text-2xl font-black leading-none md:text-4xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Join ${scannedRoomCode}` : "Quiz Battle"}</h2>
+                <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
+                <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy! 🎯</p>
+                <h2 className="mt-2 text-xl font-black leading-none md:text-3xl">{room ? `Room ${room.code}` : "Quiz Battle"}</h2>
               </div>
               </div>
               {room ? (
@@ -521,7 +521,7 @@ export default function Home() {
 
             {!room ? (
               <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : createRoom(); }}>
-                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Nama pemain" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Nama pemain" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
 
                 <input
                   value={scannedRoomCode || roomCodeInput}
@@ -546,38 +546,38 @@ export default function Home() {
               </form>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-[1.8rem] border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">Room aktif. Ajak teman masuk lalu mainkan kuisnya.</div>
+                <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 text-xs text-emerald-100 md:text-sm">Room aktif. Ajak teman masuk lalu mainkan kuisnya.</div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kode Room</p>
-                    <p className="mt-2 text-3xl font-black tracking-[0.25em] text-white">{room.code}</p>
-                    {room.category ? <p className="mt-2 text-sm text-cyan-100">Kategori: {room.category}</p> : null}
-                    {room.questionsReady ? <p className="mt-1 text-sm text-emerald-100">Pertanyaan siap dimainkan.</p> : null}
+                    <p className="mt-1 text-2xl font-black tracking-[0.25em] text-white">{room.code}</p>
+                    {room.category ? <p className="mt-1 text-xs text-cyan-100 md:text-sm">Kategori: {room.category}</p> : null}
+                    {room.questionsReady ? <p className="mt-1 text-xs text-emerald-100 md:text-sm">Pertanyaan siap dimainkan.</p> : null}
                   </div>
 
-                  <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
+                  <div className="rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
                     <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Progress</p>
-                    <p className="mt-2 text-lg font-black text-white">Round {room.round} / {room.maxRounds}</p>
-                    <p className="mt-1 text-sm text-white/60">{room.players.length} pemain di room</p>
-                    <p className="mt-1 text-sm text-white/60">Jumlah pertanyaan: {room.questionCount ?? room.maxRounds}</p>
-                    {room.status === "question" || room.status === "leaderboard" || room.status === "finished" ? <p className="mt-1 text-sm text-yellow-200">Timer: {timeLeft}s</p> : null}
+                    <p className="mt-1 text-base font-black text-white">Round {room.round} / {room.maxRounds}</p>
+                    <p className="mt-1 text-xs text-white/60 md:text-sm">{room.players.length} pemain di room</p>
+                    <p className="mt-1 text-xs text-white/60 md:text-sm">Jumlah pertanyaan: {room.questionCount ?? room.maxRounds}</p>
+                    {room.status === "question" || room.status === "leaderboard" || room.status === "finished" ? <p className="mt-1 text-xs text-yellow-200 md:text-sm">Timer: {timeLeft}s</p> : null}
                   </div>
                 </div>
 
                 {amIHost && room.status === "lobby" ? (
-                  <div className="space-y-4 rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
-                    <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori seru, misal: anime, sepak bola, Marvel, sejarah Indonesia" className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-                    <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
+                  <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
+                    <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori seru, misal: anime, sepak bola, Marvel, sejarah Indonesia" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50 md:text-base" />
+                    <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
                       <div>
-                        <p className="mb-2 text-xs uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
-                        <input type="number" min={3} max={20} value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                        <p className="mb-1 text-[10px] uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
+                        <input type="number" min={3} max={20} value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50 md:text-base" />
                       </div>
                       <div className="flex items-end">
-                        <div className="w-full rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-center text-sm text-white/70">3 - 20 soal</div>
+                        <div className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-xs text-white/70 md:text-sm">3 - 20 soal</div>
                       </div>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2 sm:grid-cols-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -585,11 +585,11 @@ export default function Home() {
                           generateQuestions();
                         }}
                         disabled={loading || (room?.players?.length || 0) < 2}
-                        className="rounded-3xl bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-pink-500/30 disabled:opacity-60"
+                        className="rounded-2xl bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-pink-500/30 disabled:opacity-60 md:text-sm"
                       >
                         {loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}
                       </button>
-                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
+                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60 md:text-sm">{loading ? "Loading..." : "Start Game"}</button>
                     </div>
                   </div>
                 ) : null}
@@ -630,29 +630,29 @@ export default function Home() {
 
                 {/* Player List - Only show to host in lobby */}
                 {room?.status === "lobby" && amIHost ? (
-                  <div className="rounded-[1.8rem] border border-emerald-300/20 bg-emerald-400/10 p-5">
+                  <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 md:p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-100">
-                        <span className="text-lg">👥</span>
+                      <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
+                        <span className="text-base">👥</span>
                         Pemain ({room.players.length})
                       </h4>
                     </div>
-                    <ul className="mt-4 grid gap-2">
+                    <ul className="mt-3 grid gap-2">
                       {room.players.map((p) => (
                         <li
                           key={p.id}
-                          className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition ${
+                          className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition ${
                             p.id === currentPlayerId
                               ? "border-amber-300/30 bg-amber-400/10"
                               : "border-white/10 bg-white/5 hover:bg-white/10"
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-sm font-bold text-white">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-xs font-bold text-white">
                               {p.name.charAt(0).toUpperCase()}
                             </span>
                             <div>
-                              <p className="font-bold text-white">
+                              <p className="text-sm font-bold text-white">
                                 {p.name} {p.id === currentPlayerId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
                               </p>
                             </div>
@@ -662,13 +662,13 @@ export default function Home() {
                               type="button"
                               onClick={() => kickPlayer(p.id, p.name)}
                               disabled={loading}
-                              className="rounded-xl border border-red-400/30 bg-red-400/20 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-400/30 disabled:opacity-50"
+                              className="rounded-lg border border-red-400/30 bg-red-400/20 px-2 py-1 text-[10px] font-bold text-red-100 transition hover:bg-red-400/30 disabled:opacity-50 md:text-xs"
                               title={`Keluarkan ${p.name}`}
                             >
                               Kick
                             </button>
                           ) : (
-                            <span className="rounded-xl bg-emerald-400/20 px-3 py-2 text-xs font-bold text-emerald-100">
+                            <span className="rounded-lg bg-emerald-400/20 px-2 py-1 text-[10px] font-bold text-emerald-100 md:text-xs">
                               Kamu
                             </span>
                           )}
@@ -680,13 +680,13 @@ export default function Home() {
 
                 {/* Countdown Overlay - Shows to all players when game is starting */}
                 {room?.status === "countdown" && (
-                  <div className="rounded-[2rem] border border-amber-300/30 bg-gradient-to-br from-amber-500/20 via-orange-500/15 to-red-500/20 p-8 text-center">
-                    <p className="text-sm font-bold uppercase tracking-[0.3em] text-amber-200">Game Starting</p>
-                    <p className="mt-2 text-lg font-bold text-white">Siap-siap!</p>
-                    <div className="mt-6 flex items-center justify-center">
+                  <div className="rounded-[1.4rem] border border-amber-300/30 bg-gradient-to-br from-amber-500/20 via-orange-500/15 to-red-500/20 p-6 text-center">
+                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-200">Game Starting</p>
+                    <p className="mt-1 text-sm font-bold text-white md:text-base">Siap-siap!</p>
+                    <div className="mt-3 flex items-center justify-center">
                       <div className="relative">
                         {/* Animated countdown number */}
-                        <span className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-6xl font-black text-white shadow-[0_0_60px_rgba(251,191,36,0.5)] animate-pulse">
+                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-4xl font-black text-white shadow-[0_0_40px_rgba(251,191,36,0.5)] animate-pulse md:h-20 md:w-20 md:text-5xl">
                           {(() => {
                             const endsAt = room?.countdownEndsAt ?? 0;
                             const now = Date.now();
@@ -696,35 +696,35 @@ export default function Home() {
                         </span>
                         {/* Rotating ring effect */}
                         <div className="absolute inset-0 rounded-full border-4 border-amber-300/30 animate-[spin_3s_linear_infinite]" style={{ borderStyle: 'dashed' }}></div>
-                        <div className="absolute inset-[-8px] rounded-full border-2 border-orange-400/20 animate-[spin_4s_linear_infinite_reverse]"></div>
+                        <div className="absolute inset-[-6px] rounded-full border-2 border-orange-400/20 animate-[spin_4s_linear_infinite_reverse]"></div>
                       </div>
                     </div>
-                    <p className="mt-6 text-sm text-amber-200/70">Pertanyaan pertama segera muncul...</p>
+                    <p className="mt-4 text-xs text-amber-200/70 md:text-sm">Pertanyaan pertama segera muncul...</p>
                   </div>
                 )}
 
                 {room?.status === "question" && room.currentQuestion ? (
-                  <div className="rounded-[1.8rem] border border-cyan-300/20 bg-cyan-400/10 p-5">
+                  <div className="rounded-[1.4rem] border border-cyan-300/20 bg-cyan-400/10 p-3 md:p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="rounded-full border border-cyan-300/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-100">{room.currentQuestion.category}</p>
-                      <p className="rounded-full bg-black/20 px-3 py-1 text-sm font-black text-cyan-100">{timeLeft}s</p>
+                      <p className="rounded-full border border-cyan-300/20 bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100">{room.currentQuestion.category}</p>
+                      <p className="rounded-full bg-black/20 px-2 py-1 text-xs font-black text-cyan-100 md:text-sm">{timeLeft}s</p>
                     </div>
-                    <p className="mt-4 text-xl font-black text-white md:text-2xl">{room.currentQuestion.question}</p>
-                    <div className="mt-5 grid gap-3">
+                    <p className="mt-3 text-lg font-black text-white md:text-xl">{room.currentQuestion.question}</p>
+                    <div className="mt-4 grid gap-2">
                       {room.currentQuestion.options.map((option, index) => {
                         const disabled = Boolean(selectedAnswer || me?.hasAnswered);
                         const active = selectedAnswer === option;
                         const gradients = ["from-pink-500 to-rose-500", "from-cyan-500 to-sky-500", "from-amber-400 to-orange-500", "from-emerald-400 to-green-500"];
-                        return <button key={option} type="button" disabled={disabled} onClick={() => submitAnswer(option)} className={`rounded-3xl border px-5 py-4 text-left text-base font-bold transition ${active ? "border-white/60 bg-white/20 text-white scale-[1.01]" : `border-white/10 bg-gradient-to-r ${gradients[index % gradients.length]} text-white`} disabled:opacity-70`}>{option}</button>;
+                        return <button key={option} type="button" disabled={disabled} onClick={() => submitAnswer(option)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${active ? "border-white/60 bg-white/20 text-white scale-[1.01]" : `border-white/10 bg-gradient-to-r ${gradients[index % gradients.length]} text-white`} disabled:opacity-70 md:text-base`}>{option}</button>;
                       })}
                     </div>
-                    {me?.hasAnswered ? <p className="mt-4 text-sm text-emerald-100">Jawaban sudah dikirim.</p> : null}
+                    {me?.hasAnswered ? <p className="mt-3 text-xs text-emerald-100 md:text-sm">Jawaban sudah dikirim.</p> : null}
                   </div>
                 ) : null}
 
                 {room.status === "leaderboard" ? (
-                  <div className={`rounded-[1.8rem] border border-amber-300/20 bg-amber-400/10 p-5 text-sm text-amber-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(251,191,36,0.35)]" : ""}`}>
-                    <p className="text-lg font-black">{me?.isCorrect ? "✅ Jawaban kamu benar!" : me?.hasAnswered ? "❌ Jawaban kamu salah." : "⏰ Kamu belum menjawab."}</p>
+                  <div className={`rounded-[1.4rem] border border-amber-300/20 bg-amber-400/10 p-3 text-sm text-amber-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(251,191,36,0.35)]" : ""}`}>
+                    <p className="text-base font-black">{me?.isCorrect ? "✅ Jawaban kamu benar!" : me?.hasAnswered ? "❌ Jawaban kamu salah." : "⏰ Kamu belum menjawab."}</p>
                     <p className="mt-2">Jawaban benar: <span className="font-black">{room.lastCorrectAnswer ?? "-"}</span></p>
                     <p className="mt-1">Poin kamu ronde ini: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
                     <p className="mt-3">Soal berikutnya mulai dalam {timeLeft}s.</p>
@@ -732,59 +732,59 @@ export default function Home() {
                 ) : null}
 
                 {room.status === "finished" ? (
-                  <div className={`rounded-[2rem] border border-fuchsia-300/20 bg-fuchsia-400/10 p-5 text-sm text-fuchsia-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(232,121,249,0.35)]" : ""}`}>
-                    <p className="text-center text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Final Result</p>
-                    <p className="mt-2 text-center text-2xl font-black text-white md:text-3xl">🎉 Hasil Akhir 🎉</p>
+                  <div className={`rounded-[1.4rem] border border-fuchsia-300/20 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-100 transition-all duration-500 ${showResultFx ? "scale-[1.02] shadow-[0_0_40px_rgba(232,121,249,0.35)]" : ""}`}>
+                    <p className="text-center text-xs uppercase tracking-[0.25em] text-fuchsia-200/70">Final Result</p>
+                    <p className="mt-1 text-center text-xl font-black text-white md:text-2xl">🎉 Hasil Akhir 🎉</p>
                     <p className="mt-2 text-center">{me?.isCorrect ? "Jawaban terakhir kamu benar!" : me?.hasAnswered ? "Jawaban terakhir kamu salah." : "Kamu belum menjawab di soal terakhir."}</p>
                     <p className="mt-1 text-center">Poin terakhir: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
 
                     {/* Championship Podium */}
-                    <div className="mt-8">
+                    <div className="mt-6">
                       {/* Podium Stage */}
                       <div className="relative flex items-end justify-center gap-2 sm:gap-3">
                         {/* 2nd Place - Left */}
                         <div className={`flex flex-col items-center transition-all duration-700 ${podiumReveal >= 2 ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`}>
-                          <div className="mb-3 text-center">
-                            <p className="max-w-[80px] truncate text-xs font-bold text-slate-200 sm:max-w-[100px]">{second?.name ?? "-"}</p>
-                            <p className="text-lg font-black text-slate-300">{second?.score ?? 0}</p>
+                          <div className="mb-2 text-center">
+                            <p className="max-w-[70px] truncate text-xs font-bold text-slate-200 sm:max-w-[90px]">{second?.name ?? "-"}</p>
+                            <p className="text-base font-black text-slate-300">{second?.score ?? 0}</p>
                           </div>
                           <div className="relative">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-slate-300 to-slate-500 text-2xl shadow-lg shadow-slate-500/50 sm:h-16 sm:w-16">🥈</div>
-                            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-400 text-xs font-black text-slate-900">2</div>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-slate-300 to-slate-500 text-xl shadow-lg shadow-slate-500/50 sm:h-14 sm:w-14">🥈</div>
+                            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-400 text-xs font-black text-slate-900">2</div>
                           </div>
-                          <div className="mt-2 flex h-24 w-16 items-end justify-center rounded-t-xl bg-gradient-to-t from-slate-600/80 to-slate-400/60 shadow-[0_0_30px_rgba(148,163,184,0.4)] backdrop-blur-sm sm:h-28 sm:w-20">
-                            <span className="mb-2 text-xs font-bold text-slate-200">2nd</span>
+                          <div className="mt-2 flex h-20 w-14 items-end justify-center rounded-t-lg bg-gradient-to-t from-slate-600/80 to-slate-400/60 shadow-[0_0_30px_rgba(148,163,184,0.4)] backdrop-blur-sm sm:h-24 sm:w-16">
+                            <span className="mb-1 text-xs font-bold text-slate-200">2nd</span>
                           </div>
                         </div>
 
                         {/* 1st Place - Center (Tallest) */}
                         <div className={`flex flex-col items-center transition-all duration-700 delay-150 ${podiumReveal >= 3 ? "translate-y-0 opacity-100 scale-100" : "translate-y-12 opacity-0 scale-95"}`}>
-                          <div className="mb-3 text-center">
-                            <p className="max-w-[90px] truncate text-sm font-bold text-yellow-200 sm:max-w-[110px]">{first?.name ?? "-"}</p>
-                            <p className="text-xl font-black text-yellow-300">{first?.score ?? 0}</p>
+                          <div className="mb-2 text-center">
+                            <p className="max-w-[80px] truncate text-xs font-bold text-yellow-200 sm:max-w-[100px]">{first?.name ?? "-"}</p>
+                            <p className="text-lg font-black text-yellow-300">{first?.score ?? 0}</p>
                           </div>
                           <div className="relative">
-                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-4xl shadow-[0_0_40px_rgba(251,191,36,0.6)] animate-pulse sm:h-24 sm:w-24">👑</div>
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-2xl">✨</div>
-                            <div className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-400 text-sm font-black text-yellow-900">1</div>
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-3xl shadow-[0_0_40px_rgba(251,191,36,0.6)] animate-pulse sm:h-20 sm:w-20">👑</div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-xl">✨</div>
+                            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400 text-xs font-black text-yellow-900">1</div>
                           </div>
-                          <div className="mt-2 flex h-36 w-20 items-end justify-center rounded-t-xl bg-gradient-to-t from-amber-600/90 via-yellow-500/70 to-yellow-300/50 shadow-[0_0_50px_rgba(251,191,36,0.5)] backdrop-blur-sm sm:h-40 sm:w-24">
-                            <span className="mb-3 text-sm font-black text-yellow-100">CHAMPION</span>
+                          <div className="mt-2 flex h-28 w-18 items-end justify-center rounded-t-lg bg-gradient-to-t from-amber-600/90 via-yellow-500/70 to-yellow-300/50 shadow-[0_0_50px_rgba(251,191,36,0.5)] backdrop-blur-sm sm:h-32 sm:w-20">
+                            <span className="mb-2 text-xs font-black text-yellow-100">CHAMPION</span>
                           </div>
                         </div>
 
                         {/* 3rd Place - Right */}
                         <div className={`flex flex-col items-center transition-all duration-700 delay-75 ${podiumReveal >= 1 ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`}>
-                          <div className="mb-3 text-center">
-                            <p className="max-w-[80px] truncate text-xs font-bold text-amber-200 sm:max-w-[100px]">{third?.name ?? "-"}</p>
-                            <p className="text-lg font-black text-amber-300">{third?.score ?? 0}</p>
+                          <div className="mb-2 text-center">
+                            <p className="max-w-[70px] truncate text-xs font-bold text-amber-200 sm:max-w-[90px]">{third?.name ?? "-"}</p>
+                            <p className="text-base font-black text-amber-300">{third?.score ?? 0}</p>
                           </div>
                           <div className="relative">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-800 text-2xl shadow-lg shadow-amber-700/50 sm:h-16 sm:w-16">🥉</div>
-                            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-xs font-black text-amber-100">3</div>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-800 text-xl shadow-lg shadow-amber-700/50 sm:h-14 sm:w-14">🥉</div>
+                            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-xs font-black text-amber-100">3</div>
                           </div>
-                          <div className="mt-2 flex h-20 w-16 items-end justify-center rounded-t-xl bg-gradient-to-t from-amber-800/80 to-amber-600/60 shadow-[0_0_30px_rgba(180,83,9,0.4)] backdrop-blur-sm sm:h-24 sm:w-20">
-                            <span className="mb-2 text-xs font-bold text-amber-200">3rd</span>
+                          <div className="mt-2 flex h-16 w-14 items-end justify-center rounded-t-lg bg-gradient-to-t from-amber-800/80 to-amber-600/60 shadow-[0_0_30px_rgba(180,83,9,0.4)] backdrop-blur-sm sm:h-20 sm:w-16">
+                            <span className="mb-1 text-xs font-bold text-amber-200">3rd</span>
                           </div>
                         </div>
                       </div>
@@ -805,17 +805,17 @@ export default function Home() {
                         </div>
                         <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
                         <button type="button" onClick={returnToLobby} className="w-full rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white">Main Lagi</button>
-                        <button type="button" onClick={leaveRoom} className="w-full rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
+                        <button type="button" onClick={leaveRoom} className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
                       </div>
                     ) : (
-                      <button type="button" onClick={leaveRoom} className="mt-6 w-full rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
+                      <button type="button" onClick={leaveRoom} className="mt-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
                     )}
                   </div>
                 ) : null}
               </div>
             )}
 
-            {error ? <div className="mt-4 rounded-3xl border border-rose-300/20 bg-rose-400/10 px-5 py-4 text-sm text-rose-100">{error}</div> : null}
+            {error ? <div className="mt-4 rounded-[1.4rem] border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
           </section>
 
           {room ? (
@@ -853,7 +853,7 @@ export default function Home() {
                       </div>
                     </div>
                   );
-                }) : <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
+                }) : <div className="rounded-[1.4rem] border border-white/10 bg-black/20 px-4 py-6 text-center text-sm text-white/45">Belum ada pemain di room.</div>}
               </div>
             </section>
           ) : null}
