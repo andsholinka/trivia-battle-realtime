@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trivia Battle Real-Time",
-  description: "Game trivia multiplayer mobile-first dengan tema neon gaming.",
+  title: "Quizzy - Get Bizzy or be dizzy",
+  description: "Game quiz multiplayer seru dan penuh warna! Get Bizzy or be dizzy 🎉",
 };
 
 export default function RootLayout({

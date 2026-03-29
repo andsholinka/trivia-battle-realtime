@@ -318,11 +318,15 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#12051f] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(34,211,238,0.24),transparent_20%),radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.22),transparent_22%),radial-gradient(circle_at_50%_100%,rgba(168,85,247,0.22),transparent_28%),linear-gradient(160deg,#14051f_0%,#1b0f3a_45%,#0d132a_100%)]" />
-      <div className="absolute -top-20 left-10 h-56 w-56 rounded-full bg-fuchsia-500/20 blur-3xl" />
-      <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" />
-      <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-yellow-400/10 blur-3xl" />
+    <main className="relative min-h-screen overflow-hidden bg-[#1a0b2e] text-white">
+      {/* Vibrant gradient background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,107,157,0.35),transparent_25%),radial-gradient(circle_at_90%_10%,rgba(192,132,252,0.35),transparent_25%),radial-gradient(circle_at_50%_100%,rgba(34,211,238,0.35),transparent_30%),radial-gradient(circle_at_80%_80%,rgba(253,224,71,0.25),transparent_25%),linear-gradient(160deg,#1a0b2e_0%,#2d1b4e_40%,#1e3a5f_100%)]" />
+      {/* Fun floating orbs */}
+      <div className="absolute -top-20 left-10 h-56 w-56 rounded-full bg-pink-500/30 blur-3xl animate-pulse" />
+      <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-purple-400/25 blur-3xl" />
+      <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-400/25 blur-3xl" />
+      <div className="absolute right-20 bottom-20 h-48 w-48 rounded-full bg-yellow-400/20 blur-3xl" />
+      <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
       <section className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-6 md:px-8 lg:px-10">
@@ -331,7 +335,11 @@ export default function Home() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-fuchsia-200/70">Lobby</p>
-                <h2 className="mt-2 text-3xl font-black leading-none md:text-5xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Join ${scannedRoomCode}` : "Trivia Battle"}</h2>
+                <div>
+                <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-4xl font-black leading-none text-transparent md:text-6xl">Quizzy</h1>
+                <p className="mt-1 text-sm font-bold italic text-yellow-300 md:text-base">Get Bizzy or be dizzy 🎯</p>
+                <h2 className="mt-3 text-2xl font-black leading-none md:text-4xl">{room ? `Room ${room.code}` : scannedRoomCode ? `Join ${scannedRoomCode}` : "Quiz Battle"}</h2>
+              </div>
               </div>
               {room ? (
                 <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
@@ -352,8 +360,8 @@ export default function Home() {
                 )}
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-cyan-400 via-sky-400 to-violet-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
-                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
+                  {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
+                  <button type="button" disabled={loading} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
             ) : (
@@ -390,8 +398,8 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
-                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-slate-950 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
+                      <button type="button" onClick={generateQuestions} disabled={loading || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-pink-500/30 disabled:opacity-60">{loading ? "Generating..." : room.questionsReady ? "Generate Ulang" : "Generate Pertanyaan"}</button>
+                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-3xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60">{loading ? "Loading..." : "Start Game"}</button>
                     </div>
                   </div>
                 ) : null}
