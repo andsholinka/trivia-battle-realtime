@@ -143,6 +143,21 @@ export default function Home() {
         if (!response.ok) return;
 
         const data = (await response.json()) as RoomState;
+
+        // Check if current player is still in the room (was kicked)
+        if (currentPlayerId && data.players && !data.players.some((p) => p.id === currentPlayerId)) {
+          setError("Kamu telah dikeluarkan dari room oleh host.");
+          localStorage.removeItem("quizzy_roomCode");
+          localStorage.removeItem("quizzy_playerId");
+          localStorage.removeItem("quizzy_nickname");
+          setRoom(null);
+          setCurrentPlayerId(null);
+          setQrCode("");
+          setJoinUrl("");
+          clearInterval(interval);
+          return;
+        }
+
         setRoom((current) => {
           if (!current || current.code !== data.code) return current;
           return data;
@@ -153,7 +168,7 @@ export default function Home() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [room?.code]);
+  }, [room?.code, currentPlayerId]);
 
   useEffect(() => {
     if (!room?.code || !currentPlayerId || room.status !== "lobby") return;
@@ -394,6 +409,33 @@ export default function Home() {
     setSelectedAnswer(null);
   };
 
+  const kickPlayer = async (playerId: string, playerName: string) => {
+    if (!room || !currentPlayerId) return;
+    if (!confirm(`Keluarkan "${playerName}" dari room?`)) return;
+
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "kick",
+          code: room.code,
+          playerId,
+          hostId: currentPlayerId,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Gagal kick pemain.");
+      // Refresh room data akan datang dari Pusher event
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal kick pemain.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const submitAnswer = async (answer: string) => {
     console.log("[Answer] Clicked:", { answer, currentPlayerId, roomCode: room?.code });
     if (!room || !currentPlayerId || selectedAnswer) {
@@ -549,6 +591,56 @@ export default function Home() {
                         {joinUrl ? <p className="mt-2 break-all text-[11px] text-cyan-100/80">{joinUrl}</p> : null}
                       </div>
                     ) : null}
+                  </div>
+                ) : null}
+
+                {/* Player List - Only show to host in lobby */}
+                {room.status === "lobby" && isHost ? (
+                  <div className="rounded-[1.8rem] border border-emerald-300/20 bg-emerald-400/10 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-100">
+                        <span className="text-lg">👥</span>
+                        Pemain ({room.players.length})
+                      </h4>
+                    </div>
+                    <ul className="mt-4 grid gap-2">
+                      {room.players.map((p) => (
+                        <li
+                          key={p.id}
+                          className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition ${
+                            p.id === currentPlayerId
+                              ? "border-amber-300/30 bg-amber-400/10"
+                              : "border-white/10 bg-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-sm font-bold text-white">
+                              {p.name.charAt(0).toUpperCase()}
+                            </span>
+                            <div>
+                              <p className="font-bold text-white">
+                                {p.name} {p.id === currentPlayerId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
+                              </p>
+                            </div>
+                          </div>
+                          {p.id !== currentPlayerId ? (
+                            <button
+                              type="button"
+                              onClick={() => kickPlayer(p.id, p.name)}
+                              disabled={loading}
+                              className="rounded-xl border border-red-400/30 bg-red-400/20 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-400/30 disabled:opacity-50"
+                              title={`Keluarkan ${p.name}`}
+                            >
+                              Kick
+                            </button>
+                          ) : (
+                            <span className="rounded-xl bg-emerald-400/20 px-3 py-2 text-xs font-bold text-emerald-100">
+                              Kamu
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ) : null}
 

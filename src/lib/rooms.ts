@@ -506,3 +506,46 @@ export async function removePlayerBySocket(socketId: string) {
 
   return updatedRoom;
 }
+
+export async function kickPlayerById(code: string, playerId: string, hostId: string) {
+  const collection = await getCollection();
+  const room = await collection.findOne({ code });
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa kick pemain.", status: 403 as const };
+  }
+
+  const playerToKick = room.players.find((p) => p.id === playerId);
+  if (!playerToKick) {
+    return { error: "Pemain tidak ditemukan.", status: 404 as const };
+  }
+
+  if (playerId === hostId) {
+    return { error: "Host tidak bisa kick diri sendiri.", status: 400 as const };
+  }
+
+  const players = room.players.filter((p) => p.id !== playerId);
+
+  // Jika tidak ada pemain lagi, hapus room
+  if (players.length === 0) {
+    await collection.deleteOne({ code });
+    return { deletedCode: code, playerName: playerToKick.name };
+  }
+
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code },
+    {
+      $set: {
+        players,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return { room: updatedRoom, playerName: playerToKick.name };
+}
