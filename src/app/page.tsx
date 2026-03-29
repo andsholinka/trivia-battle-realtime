@@ -511,7 +511,7 @@ export default function Home() {
                     <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy!</p>
                   </>
                 ) : null}
-                <h2 className="mt-2 text-xl font-black leading-none md:text-3xl">{room ? `Room ${room.code}` : ""}</h2>
+
               </div>
               </div>
             </div>
@@ -543,17 +543,6 @@ export default function Home() {
               </form>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 text-xs text-emerald-100 md:text-sm">Room aktif. Ajak teman masuk lalu mainkan kuisnya.</div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kode Room</p>
-                    <p className="mt-1 text-2xl font-black tracking-[0.25em] text-white">{room.code}</p>
-                    {room.category ? <p className="mt-1 text-xs text-cyan-100 md:text-sm">Kategori: {room.category}</p> : null}
-                    {room.questionsReady ? <p className="mt-1 text-xs text-emerald-100 md:text-sm">Pertanyaan siap dimainkan.</p> : null}
-                  </div>
-
-                  </div>
 
                 {amIHost && room.status === "lobby" ? (
                   <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
