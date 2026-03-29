@@ -62,6 +62,7 @@ async function getCollection() {
 
 export function sanitizeRoom(room: Room) {
   const currentQuestion = room.questions[room.currentQuestionIndex];
+  const everyoneAnswered = room.status === "question" && room.players.length > 0 && room.players.every((player) => Boolean(player.answer));
 
   return {
     code: room.code,
@@ -84,6 +85,7 @@ export function sanitizeRoom(room: Room) {
     leaderboardEndsAt: room.leaderboardEndsAt ?? null,
     finalResultsEndsAt: room.finalResultsEndsAt ?? null,
     lastCorrectAnswer: room.lastCorrectAnswer ?? null,
+    everyoneAnswered,
     currentQuestion:
       room.status === "question" && currentQuestion
         ? {

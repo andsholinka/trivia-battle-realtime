@@ -33,6 +33,7 @@ type RoomState = {
   leaderboardEndsAt?: number | null;
   finalResultsEndsAt?: number | null;
   lastCorrectAnswer?: string | null;
+  everyoneAnswered?: boolean;
   currentQuestion: CurrentQuestion | null;
 };
 
@@ -97,6 +98,12 @@ export default function Home() {
   }, [room?.code, room?.status, currentPlayerId]);
 
   useEffect(() => {
+    // Kalau semua sudah menjawab saat question, langsung set timer 0
+    if (room?.status === "question" && room?.everyoneAnswered) {
+      setTimeLeft(0);
+      return;
+    }
+
     const deadline = room?.status === "question"
       ? room.questionEndsAt
       : room?.status === "leaderboard"
@@ -118,7 +125,7 @@ export default function Home() {
     syncTimer();
     const interval = setInterval(syncTimer, 250);
     return () => clearInterval(interval);
-  }, [room?.questionEndsAt, room?.leaderboardEndsAt, room?.finalResultsEndsAt, room?.status]);
+  }, [room?.questionEndsAt, room?.leaderboardEndsAt, room?.finalResultsEndsAt, room?.status, room?.everyoneAnswered]);
 
   useEffect(() => {
     if (room?.status !== "question") {
