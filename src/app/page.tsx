@@ -55,15 +55,68 @@ export default function Home() {
   const [scannedRoomCode, setScannedRoomCode] = useState("");
   const [podiumReveal, setPodiumReveal] = useState(0);
 
+  // Load saved session from localStorage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     const params = new URLSearchParams(window.location.search);
     const roomFromQr = (params.get("room") || "").trim().toUpperCase();
     if (roomFromQr) {
       setScannedRoomCode(roomFromQr);
       setRoomCodeInput(roomFromQr);
+      return;
+    }
+
+    // Restore from localStorage if exists
+    const savedRoomCode = localStorage.getItem("quizzy_roomCode");
+    const savedPlayerId = localStorage.getItem("quizzy_playerId");
+    const savedNickname = localStorage.getItem("quizzy_nickname");
+
+    if (savedRoomCode && savedPlayerId) {
+      setNickname(savedNickname || "");
+      // Fetch room data to restore state
+      fetch(`/api/rooms/${savedRoomCode}`, { cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error("Room not found");
+          return response.json();
+        })
+        .then((data: RoomState) => {
+          // Check if player still in room
+          const playerExists = data.players.some((p) => p.id === savedPlayerId);
+          if (playerExists) {
+            setRoom(data);
+            setCurrentPlayerId(savedPlayerId);
+          } else {
+            // Player no longer in room, clear storage
+            localStorage.removeItem("quizzy_roomCode");
+            localStorage.removeItem("quizzy_playerId");
+            localStorage.removeItem("quizzy_nickname");
+          }
+        })
+        .catch(() => {
+          // Room not found, clear storage
+          localStorage.removeItem("quizzy_roomCode");
+          localStorage.removeItem("quizzy_playerId");
+          localStorage.removeItem("quizzy_nickname");
+        });
     }
   }, []);
+
+  // Save session to localStorage when room/player changes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (room?.code && currentPlayerId) {
+      localStorage.setItem("quizzy_roomCode", room.code);
+      localStorage.setItem("quizzy_playerId", currentPlayerId);
+      localStorage.setItem("quizzy_nickname", nickname);
+    } else {
+      // Clear storage when not in room
+      localStorage.removeItem("quizzy_roomCode");
+      localStorage.removeItem("quizzy_playerId");
+      localStorage.removeItem("quizzy_nickname");
+    }
+  }, [room?.code, currentPlayerId, nickname]);
 
   useEffect(() => {
     if (!room?.code) return;
@@ -298,6 +351,18 @@ export default function Home() {
     }
   };
 
+  const leaveRoom = () => {
+    localStorage.removeItem("quizzy_roomCode");
+    localStorage.removeItem("quizzy_playerId");
+    localStorage.removeItem("quizzy_nickname");
+    setRoom(null);
+    setCurrentPlayerId(null);
+    setQrCode("");
+    setJoinUrl("");
+    setError("");
+    setSelectedAnswer(null);
+  };
+
   const submitAnswer = async (answer: string) => {
     if (!room || !currentPlayerId || selectedAnswer) return;
 
@@ -484,8 +549,11 @@ export default function Home() {
                           <div className="flex items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/70">3 - 20 soal</div>
                         </div>
                         <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
+                        <button type="button" onClick={leaveRoom} className="w-full rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
                       </div>
-                    ) : null}
+                    ) : (
+                      <button type="button" onClick={leaveRoom} className="mt-6 w-full rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
+                    )}
                   </div>
                 ) : null}
               </div>
