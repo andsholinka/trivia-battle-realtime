@@ -62,7 +62,8 @@ async function getCollection() {
 
 export function sanitizeRoom(room: Room) {
   const currentQuestion = room.questions[room.currentQuestionIndex];
-  const everyoneAnswered = room.status === "question" && room.players.length > 0 && room.players.every((player) => Boolean(player.answer));
+  // Gunakan player.hasAnswered jika sudah diset, fallback ke Boolean(player.answer)
+  const everyoneAnswered = room.status === "question" && room.players.length > 0 && room.players.every((player) => player.hasAnswered || Boolean(player.answer));
 
   return {
     code: room.code,
@@ -70,7 +71,7 @@ export function sanitizeRoom(room: Room) {
     players: room.players
       .map(({ answeredAt, socketId, ...player }) => ({
         ...player,
-        hasAnswered: Boolean(player.answer),
+        hasAnswered: player.hasAnswered || Boolean(player.answer),
         isCorrect: room.status !== "lobby" && player.answer ? player.answer === (currentQuestion?.answer ?? room.lastCorrectAnswer) : false,
         lastEarnedPoints: player.lastEarnedPoints ?? 0,
       }))
@@ -269,48 +270,64 @@ export async function startRoomByHostId(code: string, hostId: string) {
   return { room: updatedRoom };
 }
 
-async function submitPreparedAnswer(code: string, playerMatcher: (player: Player) => boolean, answer: string) {
+async function submitPreparedAnswer(code: string, playerId: string, answer: string) {
   const collection = await getCollection();
-  const room = await collection.findOne({ code });
+  const now = Date.now();
 
-  if (!room) {
-    return { error: "Room tidak ditemukan.", status: 404 as const };
-  }
-
-  if (room.status !== "question") {
-    return { error: "Pertanyaan belum aktif.", status: 400 as const };
-  }
-
-  const playerIndex = room.players.findIndex(playerMatcher);
-  if (playerIndex === -1) {
-    return { error: "Pemain tidak ditemukan.", status: 404 as const };
-  }
-
-  const player = room.players[playerIndex];
-  if (player.answer) {
-    return { room };
-  }
-
-  room.players[playerIndex] = {
-    ...player,
-    answer,
-    answeredAt: Date.now(),
-    hasAnswered: true,
-  };
-
-  room.updatedAt = new Date();
-
+  // Atomic update dengan arrayFilters berdasarkan player.id (bukan index!)
+  // Ini fix race condition saat ada player join/leave yang mengubah urutan array
   const updatedRoom = await collection.findOneAndUpdate(
-    { code },
-    { $set: { players: room.players, updatedAt: room.updatedAt } },
-    { returnDocument: "after" }
+    { 
+      code, 
+      status: "question",
+      "players.id": playerId  // Pastikan player exists
+    },
+    { 
+      $set: { 
+        "players.$[p].answer": answer,
+        "players.$[p].answeredAt": now,
+        "players.$[p].hasAnswered": true,
+        updatedAt: new Date()
+      } 
+    },
+    { 
+      returnDocument: "after",
+      arrayFilters: [
+        { 
+          "p.id": playerId,
+          "p.answer": { $exists: false }  // Hanya update jika belum ada jawaban
+        }
+      ]
+    }
   );
+
+  // Jika atomic update gagal (player tidak ditemukan, sudah ada jawaban, atau status berubah)
+  if (!updatedRoom) {
+    // Cek apakah player sudah menjawab atau room berubah status
+    const currentRoom = await collection.findOne({ code });
+    if (!currentRoom) {
+      return { error: "Room tidak ditemukan.", status: 404 as const };
+    }
+    if (currentRoom.status !== "question") {
+      return { error: "Pertanyaan sudah berakhir.", status: 400 as const };
+    }
+    const player = currentRoom.players.find((p: Player) => p.id === playerId);
+    if (!player) {
+      return { error: "Pemain tidak ditemukan.", status: 404 as const };
+    }
+    if (player.answer) {
+      // Sudah menjawab sebelumnya, return room tanpa error
+      return { room: currentRoom };
+    }
+    // Kasus lain, return room terkini
+    return { room: currentRoom };
+  }
 
   return { room: updatedRoom };
 }
 
 export async function submitAnswerByPlayerId(code: string, playerId: string, answer: string) {
-  return submitPreparedAnswer(code, (player) => player.id === playerId, answer);
+  return submitPreparedAnswer(code, playerId, answer);
 }
 
 export async function advanceRoomToLeaderboard(code: string) {
