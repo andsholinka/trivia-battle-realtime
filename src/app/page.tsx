@@ -23,7 +23,8 @@ type RoomState = {
   code: string;
   hostId: string;
   players: Player[];
-  status: "lobby" | "question" | "leaderboard" | "finished";
+  status: "lobby" | "countdown" | "question" | "leaderboard" | "finished";
+  countdownEndsAt?: number | null;
   round: number;
   maxRounds: number;
   questionCount?: number;
@@ -644,7 +645,32 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {room.status === "question" && room.currentQuestion ? (
+                {/* Countdown Overlay - Shows to all players when game is starting */}
+                {room?.status === "countdown" && (
+                  <div className="rounded-[2rem] border border-amber-300/30 bg-gradient-to-br from-amber-500/20 via-orange-500/15 to-red-500/20 p-8 text-center">
+                    <p className="text-sm font-bold uppercase tracking-[0.3em] text-amber-200">Game Starting</p>
+                    <p className="mt-2 text-lg font-bold text-white">Siap-siap!</p>
+                    <div className="mt-6 flex items-center justify-center">
+                      <div className="relative">
+                        {/* Animated countdown number */}
+                        <span className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-6xl font-black text-white shadow-[0_0_60px_rgba(251,191,36,0.5)] animate-pulse">
+                          {(() => {
+                            const endsAt = room?.countdownEndsAt ?? 0;
+                            const now = Date.now();
+                            const remaining = Math.max(0, Math.ceil((endsAt - now) / 1000));
+                            return remaining > 0 ? remaining : "GO!";
+                          })()}
+                        </span>
+                        {/* Rotating ring effect */}
+                        <div className="absolute inset-0 rounded-full border-4 border-amber-300/30 animate-[spin_3s_linear_infinite]" style={{ borderStyle: 'dashed' }}></div>
+                        <div className="absolute inset-[-8px] rounded-full border-2 border-orange-400/20 animate-[spin_4s_linear_infinite_reverse]"></div>
+                      </div>
+                    </div>
+                    <p className="mt-6 text-sm text-amber-200/70">Pertanyaan pertama segera muncul...</p>
+                  </div>
+                )}
+
+                {room?.status === "question" && room.currentQuestion ? (
                   <div className="rounded-[1.8rem] border border-cyan-300/20 bg-cyan-400/10 p-5">
                     <div className="flex items-center justify-between gap-3">
                       <p className="rounded-full border border-cyan-300/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-100">{room.currentQuestion.category}</p>

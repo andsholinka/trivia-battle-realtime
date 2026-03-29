@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import type { WithId } from "mongodb";
 import getMongoClientPromise from "@/lib/mongodb";
 import { generateTriviaQuestions } from "@/lib/gemini";
 import { LEADERBOARD_PAUSE_MS, QUESTION_DURATION_MS, Question } from "@/lib/questions";
@@ -14,7 +15,7 @@ export type Player = {
   lastEarnedPoints?: number;
 };
 
-export type RoomStatus = "lobby" | "question" | "leaderboard" | "finished";
+export type RoomStatus = "lobby" | "countdown" | "question" | "leaderboard" | "finished";
 
 export type Room = {
   code: string;
@@ -27,6 +28,7 @@ export type Room = {
   category?: string | null;
   questions: Question[];
   questionsReady?: boolean;
+  countdownEndsAt?: number | null;
   questionEndsAt: number | null;
   currentQuestionIndex: number;
   lastCorrectAnswer?: string | null;
@@ -137,6 +139,25 @@ export async function createRoom(name: string, socketId?: string) {
 export async function getRoom(code: string) {
   const collection = await getCollection();
   return collection.findOne({ code });
+}
+
+export async function advanceRoomToQuestion(code: string): Promise<WithId<Room> | null> {
+  const collection = await getCollection();
+  const now = Date.now();
+
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code, status: "countdown" },
+    {
+      $set: {
+        status: "question",
+        questionEndsAt: now + QUESTION_DURATION_MS,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return updatedRoom;
 }
 
 export async function joinRoom(code: string, name: string, socketId?: string) {
@@ -254,10 +275,11 @@ export async function startRoomByHostId(code: string, hostId: string) {
     {
       $set: {
         players,
-        status: "question",
+        status: "countdown",
         round: 1,
         currentQuestionIndex: 0,
-        questionEndsAt: Date.now() + QUESTION_DURATION_MS,
+        countdownEndsAt: Date.now() + 3500, // 3.5 detik untuk countdown 3-2-1
+        questionEndsAt: null,
         lastCorrectAnswer: null,
         leaderboardEndsAt: null,
         finalResultsEndsAt: null,

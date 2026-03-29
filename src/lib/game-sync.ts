@@ -1,10 +1,21 @@
-import { advanceRoomToLeaderboard, getRoom, goToNextQuestion, sanitizeRoom } from "@/lib/rooms";
+import { advanceRoomToLeaderboard, advanceRoomToQuestion, getRoom, goToNextQuestion, sanitizeRoom } from "@/lib/rooms";
 
 export async function getSyncedRoom(code: string) {
   let room = await getRoom(code);
 
   if (!room) {
     return null;
+  }
+
+  // Handle countdown -> question transition
+  if (room.status === "countdown") {
+    const countdownDone = typeof room.countdownEndsAt === "number" && room.countdownEndsAt <= Date.now();
+    if (countdownDone) {
+      room = await advanceRoomToQuestion(code);
+      if (!room) {
+        return null;
+      }
+    }
   }
 
   if (room.status === "question") {
