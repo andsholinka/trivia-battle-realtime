@@ -885,7 +885,7 @@ export default function Home() {
                             </span>
                             <div>
                               <p className="text-sm font-bold text-white">
-                                {p.name} {p.id === currentPlayerId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
+                                {p.name} {p.id === room.hostId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
                               </p>
                             </div>
                           </div>
