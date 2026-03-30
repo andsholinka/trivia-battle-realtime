@@ -966,14 +966,7 @@ export default function Home() {
                     </div>
                     {amIHost ? (
                       <div className="mt-6 space-y-4">
-                        <input value={category} onChange={(e) => { setCategory(e.target.value); if (error) setError(""); }} autoCapitalize="sentences" autoCorrect="off" spellCheck={false} placeholder="Kategori baru untuk restart game" className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-                        <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
-                          <input type="number" min={3} max={20} value={questionCount} onChange={(e) => setQuestionCount(e.target.value)} className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-                          <div className="flex items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/70">3 - 20 soal</div>
-                        </div>
-                        <button type="button" onClick={restartGame} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Restart Game"}</button>
-                        <button type="button" onClick={returnToLobby} className="w-full rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white">Main Lagi</button>
-                        <button type="button" onClick={leaveRoom} className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
+                        <button type="button" onClick={returnToLobby} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Kembali ke Lobby"}</button>
                       </div>
                     ) : (
                       <button type="button" onClick={leaveRoom} className="mt-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
