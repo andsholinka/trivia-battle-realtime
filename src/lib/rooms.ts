@@ -13,6 +13,8 @@ export type Player = {
   answeredAt?: number;
   socketId?: string;
   lastEarnedPoints?: number;
+  streak?: number;
+  maxStreak?: number;
 };
 
 export type RoomStatus = "lobby" | "countdown" | "question" | "leaderboard" | "finished";
@@ -34,6 +36,7 @@ export type Room = {
   lastCorrectAnswer?: string | null;
   leaderboardEndsAt?: number | null;
   finalResultsEndsAt?: number | null;
+  streakBonusEnabled?: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -116,7 +119,7 @@ export async function createRoom(name: string, socketId?: string) {
   const room: Room = {
     code,
     hostId,
-    players: [{ id: hostId, name, score: 0, hasAnswered: false, socketId, lastEarnedPoints: 0 }],
+    players: [{ id: hostId, name, score: 0, hasAnswered: false, socketId, lastEarnedPoints: 0, streak: 0, maxStreak: 0 }],
     status: "lobby",
     round: 0,
     maxRounds: 5,
@@ -129,6 +132,7 @@ export async function createRoom(name: string, socketId?: string) {
     lastCorrectAnswer: null,
     leaderboardEndsAt: null,
     finalResultsEndsAt: null,
+    streakBonusEnabled: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -140,6 +144,36 @@ export async function createRoom(name: string, socketId?: string) {
 export async function getRoom(code: string) {
   const collection = await getCollection();
   return collection.findOne({ code });
+}
+
+export async function toggleStreakBonus(code: string, hostId: string) {
+  const collection = await getCollection();
+  const room = await collection.findOne({ code });
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa mengubah pengaturan.", status: 403 as const };
+  }
+
+  if (room.status !== "lobby") {
+    return { error: "Hanya bisa mengubah pengaturan di lobby.", status: 400 as const };
+  }
+
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code },
+    {
+      $set: {
+        streakBonusEnabled: !room.streakBonusEnabled,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return { room: updatedRoom, streakBonusEnabled: !room.streakBonusEnabled };
 }
 
 export async function advanceRoomToQuestion(code: string): Promise<WithId<Room> | null> {
@@ -206,6 +240,8 @@ export async function joinRoom(code: string, name: string, socketId?: string, pl
     hasAnswered: false,
     socketId,
     lastEarnedPoints: 0,
+    streak: 0,
+    maxStreak: 0,
   };
 
   const result = await collection.findOneAndUpdate(
@@ -378,6 +414,14 @@ export async function submitAnswerByPlayerId(code: string, playerId: string, ans
   return submitPreparedAnswer(code, playerId, answer);
 }
 
+function calculateStreakBonus(streak: number): number {
+  if (streak >= 10) return 25;
+  if (streak >= 7) return 15;
+  if (streak >= 5) return 10;
+  if (streak >= 3) return 5;
+  return 0;
+}
+
 export async function advanceRoomToLeaderboard(code: string) {
   const collection = await getCollection();
   const room = await collection.findOne({ code });
@@ -391,20 +435,42 @@ export async function advanceRoomToLeaderboard(code: string) {
     return null;
   }
 
+  const streakBonusEnabled = room.streakBonusEnabled ?? false;
+
   const players = room.players.map((player) => {
-    if (player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt) {
+    const isCorrect = player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt;
+
+    if (isCorrect) {
       const responseMs = Math.max(0, QUESTION_DURATION_MS - (room.questionEndsAt - player.answeredAt));
       const speedBonus = Math.max(100, 1000 - Math.floor(responseMs / 20));
+
+      // Calculate streak bonus if enabled
+      let streakBonus = 0;
+      let newStreak = player.streak ?? 0;
+      let newMaxStreak = player.maxStreak ?? 0;
+
+      if (streakBonusEnabled) {
+        newStreak = (player.streak ?? 0) + 1;
+        newMaxStreak = Math.max(newMaxStreak, newStreak);
+        streakBonus = calculateStreakBonus(newStreak);
+      }
+
+      const totalPoints = speedBonus + streakBonus;
+
       return {
         ...player,
-        score: player.score + speedBonus,
-        lastEarnedPoints: speedBonus,
+        score: player.score + totalPoints,
+        lastEarnedPoints: totalPoints,
+        streak: newStreak,
+        maxStreak: newMaxStreak,
       };
     }
 
+    // Wrong answer: reset streak to 0
     return {
       ...player,
       lastEarnedPoints: 0,
+      streak: streakBonusEnabled ? 0 : (player.streak ?? 0),
     };
   });
 
@@ -490,6 +556,8 @@ export async function restartRoomWithCategory(code: string, hostId: string, cate
     answeredAt: undefined,
     hasAnswered: false,
     lastEarnedPoints: 0,
+    streak: 0,
+    maxStreak: 0,
   }));
 
   const updatedRoom = await collection.findOneAndUpdate(
@@ -614,6 +682,8 @@ export async function returnRoomToLobby(code: string, hostId: string) {
     answeredAt: undefined,
     hasAnswered: false,
     lastEarnedPoints: 0,
+    streak: 0,
+    maxStreak: 0,
   }));
 
   const updatedRoom = await collection.findOneAndUpdate(
@@ -633,6 +703,7 @@ export async function returnRoomToLobby(code: string, hostId: string) {
         category: null,
         maxRounds: 0,
         questionCount: 0,
+        streakBonusEnabled: false, // Reset streak bonus setting
         updatedAt: new Date(),
       },
     },

@@ -10,6 +10,8 @@ type Player = {
   isCorrect?: boolean;
   answer?: string;
   lastEarnedPoints?: number;
+  streak?: number;
+  maxStreak?: number;
 };
 
 type CurrentQuestion = {
@@ -36,6 +38,7 @@ type RoomState = {
   lastCorrectAnswer?: string | null;
   everyoneAnswered?: boolean;
   currentQuestion: CurrentQuestion | null;
+  streakBonusEnabled?: boolean;
 };
 
 export default function Home() {
@@ -647,6 +650,48 @@ export default function Home() {
                       </div>
                     )}
                     
+                    {/* Streak Bonus Toggle */}
+                    <div className="rounded-2xl border border-orange-300/30 bg-gradient-to-r from-orange-400/20 via-amber-500/10 to-yellow-400/20 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-lg shadow-orange-500/30">
+                            <span className="text-2xl">🔥</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-white">Streak Bonus</p>
+                            <p className="text-xs text-orange-200/80">Bonus bertambah tiap jawaban benar berturut-turut</p>
+                            <p className="mt-1 text-[10px] text-amber-300/90">+5 (3x) • +10 (5x) • +15 (7x) • +25 (10x)</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setLoading(true);
+                            try {
+                              const res = await fetch(`/api/rooms/${room.code}/toggle-streak`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ hostId: currentPlayerId }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                // Socket update will refresh the room state
+                              }
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                          disabled={loading}
+                          className={`relative h-10 w-20 rounded-full transition-all duration-300 ${room.streakBonusEnabled ? "bg-gradient-to-r from-orange-400 to-amber-400 shadow-lg shadow-orange-500/40" : "bg-slate-600/50"}`}
+                        >
+                          <span className={`absolute top-1.5 h-7 w-7 rounded-full bg-white shadow-md transition-all duration-300 ${room.streakBonusEnabled ? "left-11" : "left-1.5"}`}></span>
+                          <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${room.streakBonusEnabled ? "pr-8 text-white" : "pl-6 text-white/70"}`}>
+                            {room.streakBonusEnabled ? "ON" : "OFF"}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="grid gap-2 sm:grid-cols-2">
                       <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60 md:text-sm">{loading ? "Loading..." : "Start Game"}</button>
                     </div>
@@ -750,6 +795,22 @@ export default function Home() {
                       </div>
                     )}
                     
+                    {/* Streak Bonus Info for non-host */}
+                    {!amIHost && room.streakBonusEnabled && (
+                      <div className="relative mt-4 rounded-2xl border border-orange-300/30 bg-gradient-to-r from-orange-400/20 via-amber-500/10 to-yellow-400/20 p-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-lg shadow-orange-500/30">
+                            <span className="text-xl">🔥</span>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-black text-orange-200">Streak Bonus Aktif!</p>
+                            <p className="text-xs text-orange-300/90">Jawab benar berturut-turut untuk bonus tambahan</p>
+                            <p className="mt-1 text-[10px] text-amber-300/80">+5 (3x) • +10 (5x) • +15 (7x) • +25 (10x)</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Waiting message for non-host */}
                     {!amIHost && (
                       <div className="relative mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
@@ -1007,7 +1068,14 @@ export default function Home() {
                           {isTop3 ? rankIcons[index] : <span className="text-white/60">#{index + 1}</span>}
                         </div>
                         <div>
-                          <p className="font-black text-white">{player.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-black text-white">{player.name}</p>
+                            {room.streakBonusEnabled && (player.streak ?? 0) >= 5 && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-r from-pink-400 via-rose-500 to-red-500 px-1.5 py-0.5 text-[8px] font-black text-white shadow-lg shadow-rose-500/30 animate-pulse">
+                                🔥 Hoki Banget!
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs uppercase tracking-[0.28em] text-white/40">{player.id === room?.hostId ? "Host" : "Player"}</p>
                         </div>
                       </div>
