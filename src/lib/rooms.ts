@@ -438,9 +438,9 @@ export async function advanceRoomToLeaderboard(code: string) {
   const streakBonusEnabled = room.streakBonusEnabled ?? false;
 
   const players = room.players.map((player) => {
-    const isCorrect = player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt;
+    const isCorrect = player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt != null;
 
-    if (isCorrect) {
+    if (isCorrect && room.questionEndsAt != null && player.answeredAt != null) {
       const responseMs = Math.max(0, QUESTION_DURATION_MS - (room.questionEndsAt - player.answeredAt));
       const speedBonus = Math.max(100, 1000 - Math.floor(responseMs / 20));
 
