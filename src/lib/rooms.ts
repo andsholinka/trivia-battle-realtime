@@ -441,6 +441,7 @@ export async function advanceRoomToLeaderboard(code: string) {
     const isCorrect = player.answer === question.answer && typeof player.answeredAt === "number" && room.questionEndsAt != null;
 
     if (isCorrect && room.questionEndsAt != null && player.answeredAt != null) {
+      // Type-safe calculation with validated non-null values
       const responseMs = Math.max(0, QUESTION_DURATION_MS - (room.questionEndsAt - player.answeredAt));
       const speedBonus = Math.max(100, 1000 - Math.floor(responseMs / 20));
 
