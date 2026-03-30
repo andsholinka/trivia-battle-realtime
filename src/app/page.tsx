@@ -941,8 +941,8 @@ export default function Home() {
                       <p className="rounded-full border border-cyan-300/20 bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-100">{room.currentQuestion.category}</p>
                       <p className="rounded-full bg-black/20 px-2 py-1 text-xs font-black text-cyan-100 md:text-sm">{timeLeft}s</p>
                     </div>
-                    <p className="mt-2 text-center text-xs font-bold uppercase tracking-[0.2em] text-cyan-200/70">
-                      Pertanyaan {room.round} dari {room.maxRounds}
+                    <p className="mt-2 text-center text-xs font-black text-cyan-200/90">
+                      {room.round}/{room.maxRounds}
                     </p>
                     <p className="mt-3 text-lg font-black text-white md:text-xl">{room.currentQuestion.question}</p>
                     <div className="mt-4 grid gap-2">
@@ -962,11 +962,23 @@ export default function Home() {
                     <p className="text-base font-black">{me?.isCorrect ? "✅ Jawaban kamu benar!" : me?.hasAnswered ? "❌ Jawaban kamu salah." : "⏰ Kamu belum menjawab."}</p>
                     <p className="mt-2">Jawaban benar: <span className="font-black">{room.lastCorrectAnswer ?? "-"}</span></p>
                     <p className="mt-1">Poin kamu ronde ini: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
-                    {room.streakBonusEnabled && (me?.streak ?? 0) >= 5 && me?.isCorrect && (
-                      <p className="mt-1 rounded-full border border-rose-300/30 bg-gradient-to-r from-pink-400/20 to-rose-500/20 px-2 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-rose-200">
-                        🔥 Streak Bonus: +50 poin!
-                      </p>
-                    )}
+                    {room.streakBonusEnabled && me?.isCorrect && (() => {
+                      const s = me?.streak ?? 0;
+                      let bonus = 0;
+                      let label = "";
+                      if (s >= 10) { bonus = 25; label = "10x"; }
+                      else if (s >= 7) { bonus = 15; label = "7x"; }
+                      else if (s >= 5) { bonus = 10; label = "5x"; }
+                      else if (s >= 3) { bonus = 5; label = "3x"; }
+                      if (bonus > 0) {
+                        return (
+                          <p className="mt-1 rounded-full border border-rose-300/30 bg-gradient-to-r from-pink-400/20 to-rose-500/20 px-2 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-rose-200">
+                            🔥 Streak {label}: +{bonus} poin!
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
                     <p className="mt-3">Soal berikutnya mulai dalam {timeLeft}s.</p>
                   </div>
                 ) : null}
@@ -977,13 +989,25 @@ export default function Home() {
                     <p className="mt-1 text-center text-xl font-black text-white md:text-2xl">🎉 Hasil Akhir 🎉</p>
                     <p className="mt-2 text-center">{me?.isCorrect ? "Jawaban terakhir kamu benar!" : me?.hasAnswered ? "Jawaban terakhir kamu salah." : "Kamu belum menjawab di soal terakhir."}</p>
                     <p className="mt-1 text-center">Poin terakhir: <span className="font-black">+{me?.lastEarnedPoints ?? 0}</span></p>
-                    {room.streakBonusEnabled && (me?.streak ?? 0) >= 5 && me?.isCorrect && (
-                      <p className="mt-2 text-center">
-                        <span className="inline-flex items-center gap-1 rounded-full border border-rose-300/30 bg-gradient-to-r from-pink-400/20 to-rose-500/20 px-3 py-1 text-xs font-black uppercase tracking-[0.15em] text-rose-200">
-                          🔥 Streak Bonus: +50 poin!
-                        </span>
-                      </p>
-                    )}
+                    {room.streakBonusEnabled && me?.isCorrect && (() => {
+                      const s = me?.streak ?? 0;
+                      let bonus = 0;
+                      let label = "";
+                      if (s >= 10) { bonus = 25; label = "10x"; }
+                      else if (s >= 7) { bonus = 15; label = "7x"; }
+                      else if (s >= 5) { bonus = 10; label = "5x"; }
+                      else if (s >= 3) { bonus = 5; label = "3x"; }
+                      if (bonus > 0) {
+                        return (
+                          <p className="mt-2 text-center">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-300/30 bg-gradient-to-r from-pink-400/20 to-rose-500/20 px-3 py-1 text-xs font-black uppercase tracking-[0.15em] text-rose-200">
+                              🔥 Streak {label}: +{bonus} poin!
+                            </span>
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
 
                     {/* Championship Podium */}
                     <div className="mt-6">
