@@ -969,7 +969,10 @@ export default function Home() {
                         <button type="button" onClick={returnToLobby} disabled={loading} className="w-full rounded-3xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-cyan-400 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white disabled:opacity-60">{loading ? "Loading..." : "Kembali ke Lobby"}</button>
                       </div>
                     ) : (
-                      <button type="button" onClick={leaveRoom} className="mt-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white hover:bg-white/20">Kembali ke Lobby</button>
+                      <div className="mt-6 rounded-2xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-4 text-center">
+                        <p className="text-sm font-bold text-cyan-200">Menunggu admin memulai pertandingan baru...</p>
+                        <p className="mt-1 text-xs text-cyan-300/70">Tetap di room, admin akan generate soal baru</p>
+                      </div>
                     )}
                   </div>
                 ) : null}
