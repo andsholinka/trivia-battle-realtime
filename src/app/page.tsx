@@ -766,8 +766,8 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {/* Player List - Only show to NON-HOST players in lobby */}
-                {room?.status === "lobby" && !amIHost ? (
+                {/* Player List - Only show to HOST in lobby (with kick functionality) */}
+                {room?.status === "lobby" && amIHost ? (
                   <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 md:p-4">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
@@ -791,13 +791,25 @@ export default function Home() {
                             </span>
                             <div>
                               <p className="text-sm font-bold text-white">
-                                {p.name} {p.id === room.hostId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
+                                {p.name} {p.id === currentPlayerId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
                               </p>
                             </div>
                           </div>
-                          <span className="text-[10px] text-white/50">
-                            {p.id === currentPlayerId ? "Kamu" : ""}
-                          </span>
+                          {p.id !== currentPlayerId ? (
+                            <button
+                              type="button"
+                              onClick={() => kickPlayer(p.id, p.name)}
+                              disabled={loading}
+                              className="rounded-lg border border-red-400/30 bg-red-400/20 px-2 py-1 text-[10px] font-bold text-red-100 transition hover:bg-red-400/30 disabled:opacity-50 md:text-xs"
+                              title={`Keluarkan ${p.name}`}
+                            >
+                              Kick
+                            </button>
+                          ) : (
+                            <span className="rounded-lg bg-emerald-400/20 px-2 py-1 text-[10px] font-bold text-emerald-100 md:text-xs">
+                              Kamu
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>
