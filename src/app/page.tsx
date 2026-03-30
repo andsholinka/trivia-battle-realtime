@@ -567,25 +567,30 @@ export default function Home() {
                             type="text"
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            placeholder="Masukkan kategori (contoh: Sejarah Indonesia)"
+                            placeholder="Bebas apapun!"
                             className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-400 focus:outline-none"
                           />
                         </div>
                         
-                        {/* Question Count Input */}
+                        {/* Question Count Selection */}
                         <div className="space-y-1">
                           <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
-                          <input
-                            type="number"
-                            min={3}
-                            max={20}
-                            value={questionCount}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value) || 5;
-                              setQuestionCount(Math.min(Math.max(val, 3), 20).toString());
-                            }}
-                            className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-400 focus:outline-none"
-                          />
+                          <div className="flex gap-2">
+                            {[5, 10, 15, 20].map((num) => (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => setQuestionCount(num.toString())}
+                                className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold transition ${
+                                  questionCount === num.toString()
+                                    ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-orange-500/25"
+                                    : "bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                                }`}
+                              >
+                                {num}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                         
                         {/* Generate Button */}
