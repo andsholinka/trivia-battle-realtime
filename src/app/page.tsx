@@ -552,21 +552,6 @@ export default function Home() {
 
                 {amIHost && room.status === "lobby" ? (
                   <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
-                    {/* Players List */}
-                    <div className="space-y-2">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Pemain ({room.players.length})</p>
-                      <div className="flex flex-wrap gap-2">
-                        {room.players.map((p) => (
-                          <div key={p.id} className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
-                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-xs font-bold">
-                              {p.name.charAt(0).toUpperCase()}
-                            </div>
-                            <span className="text-sm font-medium">{p.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
                     {/* Question Configuration Form - Only show when category not yet set */}
                     {!room.category ? (
                       <div className="space-y-3 rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/5 p-4">
@@ -590,17 +575,17 @@ export default function Home() {
                         {/* Question Count Input */}
                         <div className="space-y-1">
                           <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="range"
-                              min={1}
-                              max={20}
-                              value={parseInt(questionCount) || 5}
-                              onChange={(e) => setQuestionCount(e.target.value)}
-                              className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-amber-400"
-                            />
-                            <span className="w-10 text-center text-lg font-bold text-amber-300">{questionCount}</span>
-                          </div>
+                          <input
+                            type="number"
+                            min={3}
+                            max={20}
+                            value={questionCount}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 5;
+                              setQuestionCount(Math.min(Math.max(val, 3), 20).toString());
+                            }}
+                            className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-400 focus:outline-none"
+                          />
                         </div>
                         
                         {/* Generate Button */}
@@ -637,8 +622,8 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {/* Player Lobby Showcase - Visible to ALL players in lobby */}
-                {room?.status === "lobby" && room.players.length > 0 ? (
+                {/* Player Lobby Showcase - Visible to NON-HOST players in lobby */}
+                {room?.status === "lobby" && room.players.length > 0 && !amIHost ? (
                   <div className="relative overflow-hidden rounded-[1.8rem] border border-cyan-300/20 bg-gradient-to-br from-slate-900/80 via-purple-900/20 to-slate-900/80 p-5 shadow-2xl shadow-cyan-500/10">
                     {/* Animated background glow */}
                     <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl animate-pulse"></div>
@@ -781,8 +766,8 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {/* Player List - Only show to host in lobby */}
-                {room?.status === "lobby" && amIHost ? (
+                {/* Player List - Only show to NON-HOST players in lobby */}
+                {room?.status === "lobby" && !amIHost ? (
                   <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 md:p-4">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
@@ -806,25 +791,13 @@ export default function Home() {
                             </span>
                             <div>
                               <p className="text-sm font-bold text-white">
-                                {p.name} {p.id === currentPlayerId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
+                                {p.name} {p.id === room.hostId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
                               </p>
                             </div>
                           </div>
-                          {p.id !== currentPlayerId ? (
-                            <button
-                              type="button"
-                              onClick={() => kickPlayer(p.id, p.name)}
-                              disabled={loading}
-                              className="rounded-lg border border-red-400/30 bg-red-400/20 px-2 py-1 text-[10px] font-bold text-red-100 transition hover:bg-red-400/30 disabled:opacity-50 md:text-xs"
-                              title={`Keluarkan ${p.name}`}
-                            >
-                              Kick
-                            </button>
-                          ) : (
-                            <span className="rounded-lg bg-emerald-400/20 px-2 py-1 text-[10px] font-bold text-emerald-100 md:text-xs">
-                              Kamu
-                            </span>
-                          )}
+                          <span className="text-[10px] text-white/50">
+                            {p.id === currentPlayerId ? "Kamu" : ""}
+                          </span>
                         </li>
                       ))}
                     </ul>
