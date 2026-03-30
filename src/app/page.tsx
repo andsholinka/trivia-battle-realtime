@@ -60,6 +60,7 @@ export default function Home() {
   const [podiumReveal, setPodiumReveal] = useState(0);
   const [copied, setCopied] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
 
   // Safety: reset loading jika stuck (max 10 detik)
   useEffect(() => {
@@ -94,6 +95,7 @@ export default function Home() {
     const savedNickname = localStorage.getItem("quizzy_nickname");
 
     if (savedRoomCode && savedPlayerId) {
+      setIsRestoringSession(true);
       setNickname(savedNickname || "");
       // Fetch room data to restore state
       fetch(`/api/rooms/${savedRoomCode}`, { cache: "no-store" })
@@ -113,12 +115,14 @@ export default function Home() {
             localStorage.removeItem("quizzy_playerId");
             localStorage.removeItem("quizzy_nickname");
           }
+          setIsRestoringSession(false);
         })
         .catch(() => {
           // Room not found, clear storage
           localStorage.removeItem("quizzy_roomCode");
           localStorage.removeItem("quizzy_playerId");
           localStorage.removeItem("quizzy_nickname");
+          setIsRestoringSession(false);
         });
     }
   }, []);
@@ -514,7 +518,7 @@ export default function Home() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div>
-                {!room ? (
+                {!room && !isRestoringSession ? (
                   <>
                     <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
                     <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy!</p>
@@ -525,7 +529,12 @@ export default function Home() {
               </div>
             </div>
 
-            {!room ? (
+            {isRestoringSession ? (
+              <div className="mt-10 flex flex-col items-center justify-center space-y-4">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-cyan-400" />
+                <p className="text-sm text-white/70">Menyambungkan kembali...</p>
+              </div>
+            ) : !room ? (
               <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : createRoom(); }}>
                 <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Nama pemain" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
 
@@ -550,7 +559,9 @@ export default function Home() {
                   <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
-            ) : (
+            ) : null}
+
+            {room && (
               <div className="mt-6 space-y-4">
 
                 {amIHost && room.status === "lobby" ? (
