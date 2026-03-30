@@ -86,7 +86,7 @@ export default function Home() {
     if (roomFromQr) {
       setScannedRoomCode(roomFromQr);
       setRoomCodeInput(roomFromQr);
-      return;
+      // Don't return - allow session restore to check if player already in this room
     }
 
     // Restore from localStorage if exists
@@ -94,11 +94,20 @@ export default function Home() {
     const savedPlayerId = localStorage.getItem("quizzy_playerId");
     const savedNickname = localStorage.getItem("quizzy_nickname");
 
-    if (savedRoomCode && savedPlayerId) {
+    // Determine which room to restore to
+    // If QR code points to different room than saved session, prioritize QR code
+    // (user wants to join a different room)
+    const targetRoomCode = roomFromQr && savedRoomCode !== roomFromQr
+      ? roomFromQr  // Different room via QR - don't restore old session
+      : savedRoomCode;  // Same room or no QR - restore saved session
+
+    // Only restore if we have a target room and player ID
+    // Skip restore if QR code points to a different room (let user join manually)
+    if (targetRoomCode && savedPlayerId && !(roomFromQr && savedRoomCode && savedRoomCode !== roomFromQr)) {
       setIsRestoringSession(true);
       setNickname(savedNickname || "");
       // Fetch room data to restore state
-      fetch(`/api/rooms/${savedRoomCode}`, { cache: "no-store" })
+      fetch(`/api/rooms/${targetRoomCode}`, { cache: "no-store" })
         .then((response) => {
           if (!response.ok) throw new Error("Room not found");
           return response.json();
@@ -286,11 +295,18 @@ export default function Home() {
       if (!response.ok) throw new Error(data.error || "Gagal membuat room.");
       setRoom(data);
       const meData = data.players.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
-      setCurrentPlayerId(meData?.id ?? null);
+      const playerId = meData?.id ?? null;
+      setCurrentPlayerId(playerId);
       setScannedRoomCode("");
       setShowSetup(true); // Show setup view for host to configure questions
       if (typeof window !== "undefined") {
         window.history.replaceState({}, "", "/");
+        // Persist host session to localStorage for reconnection on refresh
+        if (playerId && data.code) {
+          localStorage.setItem("quizzy_playerId", playerId);
+          localStorage.setItem("quizzy_roomCode", data.code);
+          localStorage.setItem("quizzy_nickname", safeNickname);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal membuat room.");
@@ -319,7 +335,14 @@ export default function Home() {
       if (!response.ok) throw new Error(data.error || "Gagal join room.");
       setRoom(data);
       const meData = data.players.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
-      setCurrentPlayerId(meData?.id ?? null);
+      const playerId = meData?.id ?? null;
+      setCurrentPlayerId(playerId);
+      // Persist session to localStorage for reconnection on refresh
+      if (typeof window !== "undefined" && playerId) {
+        localStorage.setItem("quizzy_playerId", playerId);
+        localStorage.setItem("quizzy_roomCode", safeRoomCode);
+        localStorage.setItem("quizzy_nickname", safeNickname);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal join room.");
     } finally {
