@@ -90,7 +90,7 @@ export default function SetupView({
               <Input
                 value={customCategory}
                 onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder="Masukkan kategori kustom..."
+                placeholder="Bebas apapun!"
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
               />
             </div>
@@ -100,19 +100,22 @@ export default function SetupView({
           <div className="space-y-3">
             <label className="text-white/80 font-medium flex items-center gap-2">
               <Hash className="w-4 h-4" />
-              Jumlah Pertanyaan: <span className="text-indigo-400 font-bold">{questionCount}</span>
+              Jumlah Pertanyaan
             </label>
-            <input
-              type="range"
-              min={1}
-              max={20}
-              value={questionCount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestionCount(Number(e.target.value))}
-              className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-            <div className="flex justify-between text-xs text-white/40">
-              <span>1</span>
-              <span>20</span>
+            <div className="flex gap-2">
+              {[5, 10, 15, 20].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setQuestionCount(count)}
+                  className={`flex-1 py-3 rounded-lg text-sm font-medium transition-all ${
+                    questionCount === count
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg scale-105"
+                      : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {count}
+                </button>
+              ))}
             </div>
           </div>
 
