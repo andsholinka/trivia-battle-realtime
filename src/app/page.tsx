@@ -684,8 +684,8 @@ export default function Home() {
                           disabled={loading}
                           className={`relative h-10 w-20 rounded-full transition-all duration-300 ${room.streakBonusEnabled ? "bg-gradient-to-r from-orange-400 to-amber-400 shadow-lg shadow-orange-500/40" : "bg-slate-600/50"}`}
                         >
-                          <span className={`absolute top-1.5 h-7 w-7 rounded-full bg-white shadow-md transition-all duration-300 ${room.streakBonusEnabled ? "left-11" : "left-1.5"}`}></span>
-                          <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${room.streakBonusEnabled ? "pr-8 text-white" : "pl-6 text-white/70"}`}>
+                          <span className={`pointer-events-none absolute top-1.5 h-7 w-7 rounded-full bg-white shadow-md transition-all duration-300 ${room.streakBonusEnabled ? "left-11" : "left-1.5"}`}></span>
+                          <span className={`pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-black ${room.streakBonusEnabled ? "pr-8 text-white" : "pl-6 text-white/70"}`}>
                             {room.streakBonusEnabled ? "ON" : "OFF"}
                           </span>
                         </button>
