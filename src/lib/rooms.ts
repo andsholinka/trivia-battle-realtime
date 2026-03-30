@@ -93,6 +93,7 @@ export function sanitizeRoom(room: Room) {
     finalResultsEndsAt: room.finalResultsEndsAt ?? null,
     lastCorrectAnswer: room.lastCorrectAnswer ?? null,
     everyoneAnswered,
+    streakBonusEnabled: room.streakBonusEnabled ?? false,
     currentQuestion:
       room.status === "question" && currentQuestion
         ? {

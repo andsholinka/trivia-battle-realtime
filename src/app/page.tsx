@@ -675,7 +675,10 @@ export default function Home() {
                               });
                               if (res.ok) {
                                 const data = await res.json();
-                                // Socket update will refresh the room state
+                                // Update room state immediately from API response
+                                if (data.room) {
+                                  setRoom(data.room);
+                                }
                               }
                             } finally {
                               setLoading(false);
