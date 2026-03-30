@@ -638,3 +638,33 @@ export async function returnRoomToLobby(code: string, hostId: string) {
 
   return { room: updatedRoom };
 }
+
+export async function resetQuestions(code: string, hostId: string) {
+  const collection = await getCollection();
+  const room = await collection.findOne({ code });
+
+  if (!room) {
+    return { error: "Room tidak ditemukan.", status: 404 as const };
+  }
+
+  if (room.hostId !== hostId) {
+    return { error: "Hanya host yang bisa reset pertanyaan.", status: 403 as const };
+  }
+
+  const updatedRoom = await collection.findOneAndUpdate(
+    { code },
+    {
+      $set: {
+        category: null,
+        questions: [],
+        questionsReady: false,
+        maxRounds: 0,
+        questionCount: 0,
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return { room: updatedRoom };
+}

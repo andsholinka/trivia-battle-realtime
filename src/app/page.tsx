@@ -613,11 +613,37 @@ export default function Home() {
                         </button>
                       </div>
                     ) : (
-                      /* Category set - show ready state */
-                      <div className="space-y-1">
-                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kategori</p>
-                        <p className="text-lg font-bold text-cyan-300">{room.category}</p>
-                        <p className="mt-1 text-xs text-emerald-100 md:text-sm">✅ Pertanyaan siap dimainkan ({room.questionCount || questionCount} pertanyaan)</p>
+                      /* Category set - show ready state with reset option */
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kategori</p>
+                          <p className="text-lg font-bold text-cyan-300">{room.category}</p>
+                          <p className="mt-1 text-xs text-emerald-100 md:text-sm">✅ Pertanyaan siap dimainkan ({room.questionCount || questionCount} pertanyaan)</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm("Yakin mau reset dan generate pertanyaan baru? Kategori saat ini akan dihapus.")) return;
+                            setLoading(true);
+                            try {
+                              const res = await fetch(`/api/rooms/${room.code}/reset-questions`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ hostId: currentPlayerId }),
+                              });
+                              if (res.ok) {
+                                setCategory("");
+                                setQuestionCount("5");
+                              }
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                          disabled={loading}
+                          className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white/80 transition hover:bg-white/20 hover:text-white disabled:opacity-50"
+                        >
+                          {loading ? "Loading..." : "↻ Reset & Ganti Pertanyaan"}
+                        </button>
                       </div>
                     )}
                     
@@ -765,7 +791,6 @@ export default function Home() {
                     {showQR && qrCode ? (
                       <div className="mt-4 flex flex-col items-center">
                         <img src={qrCode} alt="QR Join Room" className="w-48 rounded-3xl border border-white/10 bg-white/5 p-2" />
-                        {joinUrl ? <p className="mt-2 break-all text-[11px] text-cyan-100/80">{joinUrl}</p> : null}
                       </div>
                     ) : null}
                   </div>
