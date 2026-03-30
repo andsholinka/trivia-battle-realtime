@@ -651,16 +651,16 @@ export default function Home() {
                     )}
                     
                     {/* Streak Bonus Toggle */}
-                    <div className="rounded-2xl border border-orange-300/30 bg-gradient-to-r from-orange-400/20 via-amber-500/10 to-yellow-400/20 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-lg shadow-orange-500/30">
-                            <span className="text-2xl">🔥</span>
+                    <div className="rounded-2xl border border-orange-300/30 bg-gradient-to-r from-orange-400/20 via-amber-500/10 to-yellow-400/20 p-3 sm:p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-lg shadow-orange-500/30">
+                            <span className="text-xl sm:text-2xl">🔥</span>
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-black text-white">Streak Bonus</p>
                             <p className="text-xs text-orange-200/80">Bonus bertambah tiap jawaban benar berturut-turut</p>
-                            <p className="mt-1 text-[10px] text-amber-300/90">+5 (3x) • +10 (5x) • +15 (7x) • +25 (10x)</p>
+                            <p className="mt-0.5 sm:mt-1 text-[10px] text-amber-300/90">+5 (3x) • +10 (5x) • +15 (7x) • +25 (10x)</p>
                           </div>
                         </div>
                         <button
@@ -685,10 +685,10 @@ export default function Home() {
                             }
                           }}
                           disabled={loading}
-                          className={`relative h-10 w-20 rounded-full transition-all duration-300 ${room.streakBonusEnabled ? "bg-gradient-to-r from-orange-400 to-amber-400 shadow-lg shadow-orange-500/40" : "bg-slate-600/50"}`}
+                          className={`relative h-9 w-[72px] sm:h-10 sm:w-20 shrink-0 self-end sm:self-auto rounded-full transition-all duration-300 ${room.streakBonusEnabled ? "bg-gradient-to-r from-orange-400 to-amber-400 shadow-lg shadow-orange-500/40" : "bg-slate-600/50"}`}
                         >
-                          <span className={`pointer-events-none absolute top-1.5 h-7 w-7 rounded-full bg-white shadow-md transition-all duration-300 ${room.streakBonusEnabled ? "left-11" : "left-1.5"}`}></span>
-                          <span className={`pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-black ${room.streakBonusEnabled ? "pr-8 text-white" : "pl-6 text-white/70"}`}>
+                          <span className={`pointer-events-none absolute top-1 sm:top-1.5 h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-white shadow-md transition-all duration-300 ${room.streakBonusEnabled ? "left-9 sm:left-11" : "left-1 sm:left-1.5"}`}></span>
+                          <span className={`pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-black ${room.streakBonusEnabled ? "pr-6 sm:pr-8 text-white" : "pl-4 sm:pl-6 text-white/70"}`}>
                             {room.streakBonusEnabled ? "ON" : "OFF"}
                           </span>
                         </button>
