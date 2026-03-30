@@ -766,8 +766,8 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {/* Player List - Only show to HOST in lobby (with kick functionality) */}
-                {room?.status === "lobby" && amIHost ? (
+                {/* Player List - Show to ALL in lobby */}
+                {room?.status === "lobby" ? (
                   <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 md:p-4">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
@@ -795,7 +795,7 @@ export default function Home() {
                               </p>
                             </div>
                           </div>
-                          {p.id !== currentPlayerId ? (
+                          {amIHost && p.id !== currentPlayerId ? (
                             <button
                               type="button"
                               onClick={() => kickPlayer(p.id, p.name)}
@@ -805,11 +805,11 @@ export default function Home() {
                             >
                               Kick
                             </button>
-                          ) : (
+                          ) : p.id === currentPlayerId ? (
                             <span className="rounded-lg bg-emerald-400/20 px-2 py-1 text-[10px] font-bold text-emerald-100 md:text-xs">
                               Kamu
                             </span>
-                          )}
+                          ) : null}
                         </li>
                       ))}
                     </ul>
