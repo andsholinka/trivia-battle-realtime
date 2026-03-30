@@ -56,6 +56,7 @@ export default function Home() {
   const [scannedRoomCode, setScannedRoomCode] = useState("");
   const [podiumReveal, setPodiumReveal] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
 
   // Safety: reset loading jika stuck (max 10 detik)
   useEffect(() => {
@@ -280,6 +281,7 @@ export default function Home() {
       const meData = data.players.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
       setCurrentPlayerId(meData?.id ?? null);
       setScannedRoomCode("");
+      setShowSetup(true); // Show setup view for host to configure questions
       if (typeof window !== "undefined") {
         window.history.replaceState({}, "", "/");
       }
@@ -318,13 +320,16 @@ export default function Home() {
     }
   };
 
-  const generateQuestions = async () => {
-    console.log("[Generate] Clicked", { room, currentPlayerId, category, questionCount });
+  const generateQuestions = async (cat?: string, count?: number) => {
+    const useCategory = cat?.trim() || category;
+    const useCount = count || Number(questionCount || 5);
+
+    console.log("[Generate] Clicked", { room, currentPlayerId, useCategory, useCount });
     if (!room || !currentPlayerId) {
       console.log("[Generate] Missing room or currentPlayerId");
       return;
     }
-    if (!category.trim()) {
+    if (!useCategory.trim()) {
       console.log("[Generate] Category empty");
       setError("Kategori wajib diisi sebelum generate pertanyaan.");
       return;
@@ -337,12 +342,13 @@ export default function Home() {
       const response = await fetch(`/api/rooms/${room.code}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: currentPlayerId, category, questionCount: Number(questionCount || 5) }),
+        body: JSON.stringify({ hostId: currentPlayerId, category: useCategory, questionCount: useCount }),
       });
       const data = await response.json();
       console.log("[Generate] Response:", response.status, data);
       if (!response.ok) throw new Error(data.error || "Gagal generate pertanyaan.");
       setRoom(data);
+      setShowSetup(false); // Hide setup view after successful generation
     } catch (err) {
       console.error("[Generate] Error:", err);
       setError(err instanceof Error ? err.message : "Gagal generate pertanyaan.");
@@ -561,13 +567,69 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    {/* Category */}
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kategori</p>
-                      <p className="text-lg font-bold text-cyan-300">{room.category || category || "Belum dipilih"}</p>
-                    </div>
-
-                    {room.category ? <p className="mt-1 text-xs text-emerald-100 md:text-sm">Pertanyaan siap dimainkan.</p> : null}
+                    {/* Question Configuration Form - Only show when category not yet set */}
+                    {!room.category ? (
+                      <div className="space-y-3 rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/5 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">⚙️</span>
+                          <p className="text-sm font-bold text-amber-200">Konfigurasi Pertanyaan</p>
+                        </div>
+                        
+                        {/* Category Input */}
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kategori Pertanyaan</p>
+                          <input
+                            type="text"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            placeholder="Masukkan kategori (contoh: Sejarah Indonesia)"
+                            className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-400 focus:outline-none"
+                          />
+                        </div>
+                        
+                        {/* Question Count Input */}
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={1}
+                              max={20}
+                              value={parseInt(questionCount) || 5}
+                              onChange={(e) => setQuestionCount(e.target.value)}
+                              className="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                            />
+                            <span className="w-10 text-center text-lg font-bold text-amber-300">{questionCount}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Generate Button */}
+                        <button
+                          type="button"
+                          onClick={() => generateQuestions(category, parseInt(questionCount) || 5)}
+                          disabled={loading || !category.trim()}
+                          className="w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Generating...
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center gap-2">
+                              <span>✨</span> Generate Pertanyaan
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      /* Category set - show ready state */
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kategori</p>
+                        <p className="text-lg font-bold text-cyan-300">{room.category}</p>
+                        <p className="mt-1 text-xs text-emerald-100 md:text-sm">✅ Pertanyaan siap dimainkan ({room.questionCount || questionCount} pertanyaan)</p>
+                      </div>
+                    )}
                     
                     <div className="grid gap-2 sm:grid-cols-2">
                       <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60 md:text-sm">{loading ? "Loading..." : "Start Game"}</button>
