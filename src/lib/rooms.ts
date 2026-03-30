@@ -630,6 +630,9 @@ export async function returnRoomToLobby(code: string, hostId: string) {
         lastCorrectAnswer: null,
         questionsReady: false, // Require admin to generate new questions
         questions: [],
+        category: null,
+        maxRounds: 0,
+        questionCount: 0,
         updatedAt: new Date(),
       },
     },
