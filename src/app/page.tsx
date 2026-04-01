@@ -614,18 +614,14 @@ export default function Home() {
                 />
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join the Party!"}</button>
-                  {!scannedRoomCode ? (
-                    isSignedIn ? (
-                      <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room!"}</button>
-                    ) : (
-                      <Show when="signed-out">
-                        <SignInButton mode="modal">
-                          <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Login to Create Room!</button>
-                        </SignInButton>
-                      </Show>
-                    )
-                  ) : null}
+                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : "Join the Party!"}</button>
+                  {isSignedIn ? (
+                    <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room!"}</button>
+                  ) : (
+                    <SignInButton mode="modal">
+                      <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Create Room!</button>
+                    </SignInButton>
+                  )}
                 </div>
               </form>
             ) : null}
