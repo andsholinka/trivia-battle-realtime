@@ -900,6 +900,28 @@ export default function Home() {
                         <p className="mt-1 text-xs text-white/50">Siapkan dirimu!</p>
                       </div>
                     )}
+
+                    {/* Leave Room button for non-host in lobby */}
+                    {!amIHost && room?.status === "lobby" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Clear all room session data
+                          localStorage.removeItem("quizzy_roomCode");
+                          localStorage.removeItem("quizzy_playerId");
+                          localStorage.removeItem("quizzy_nickname");
+                          // Kill session - return to landing page
+                          setRoom(null);
+                          setCurrentPlayerId(null);
+                          setQrCode("");
+                          setJoinUrl("");
+                          setError("");
+                        }}
+                        className="mt-4 w-full rounded-full border border-red-400/40 bg-gradient-to-r from-red-500/80 to-rose-600/80 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_8px_24px_rgba(239,68,68,0.35)] transition hover:scale-[1.02] hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)] active:scale-[0.98]"
+                      >
+                        🚪 Keluar dari Room
+                      </button>
+                    )}
                   </div>
                 ) : null}
 
