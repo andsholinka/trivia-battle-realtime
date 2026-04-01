@@ -43,7 +43,7 @@ type RoomState = {
 };
 
 export default function Home() {
-  const { isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const [nickname, setNickname] = useState("");
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [room, setRoom] = useState<RoomState | null>(null);
@@ -184,6 +184,22 @@ export default function Home() {
       localStorage.removeItem("quizzy_nickname");
     }
   }, [room?.code, currentPlayerId, nickname]);
+
+  useEffect(() => {
+    if (!isLoaded || isSignedIn) return;
+
+    localStorage.removeItem("quizzy_roomCode");
+    localStorage.removeItem("quizzy_playerId");
+    localStorage.removeItem("quizzy_nickname");
+    setRoom(null);
+    setCurrentPlayerId(null);
+    setQrCode("");
+    setJoinUrl("");
+    setError("");
+    setSelectedAnswer(null);
+    setShowSetup(false);
+    setNickname("");
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (!room?.code) return;
