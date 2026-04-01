@@ -114,7 +114,7 @@ export default function Home() {
         })
         .then((data: RoomState) => {
           // Check if player still in room
-          const playerExists = data.players.some((p) => p.id === savedPlayerId);
+          const playerExists = data.players?.some((p) => p.id === savedPlayerId);
           if (playerExists) {
             setRoom(data);
             setCurrentPlayerId(savedPlayerId);
@@ -262,7 +262,7 @@ export default function Home() {
   }, [room?.status, room?.code]);
 
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
-  const me = room?.players.find((player) => player.id === currentPlayerId) ?? null;
+  const me = room?.players?.find((player) => player.id === currentPlayerId) ?? null;
   // Debug: log me state when room status changes to question or leaderboard
   useEffect(() => {
     if (room?.status === "question" || room?.status === "leaderboard") {
@@ -294,7 +294,7 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal membuat room.");
       setRoom(data);
-      const meData = data.players.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
+      const meData = data.players?.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
       const playerId = meData?.id ?? null;
       setCurrentPlayerId(playerId);
       setScannedRoomCode("");
@@ -334,7 +334,7 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal join room.");
       setRoom(data);
-      const meData = data.players.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
+      const meData = data.players?.find((player: Player) => player.name.toLowerCase() === safeNickname.toLowerCase());
       const playerId = meData?.id ?? null;
       setCurrentPlayerId(playerId);
       // Persist session to localStorage for reconnection on refresh
