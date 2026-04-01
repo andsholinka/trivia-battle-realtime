@@ -510,7 +510,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#1a0b2e] text-white">
+    <main className={`relative bg-[#1a0b2e] text-white ${!room ? "h-screen overflow-hidden" : "min-h-screen overflow-hidden"}`}>
       {/* Vibrant gradient background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,107,157,0.35),transparent_25%),radial-gradient(circle_at_90%_10%,rgba(192,132,252,0.35),transparent_25%),radial-gradient(circle_at_50%_100%,rgba(34,211,238,0.35),transparent_30%),radial-gradient(circle_at_80%_80%,rgba(253,224,71,0.25),transparent_25%),linear-gradient(160deg,#1a0b2e_0%,#2d1b4e_40%,#1e3a5f_100%)]" />
       {/* Fun floating orbs */}
@@ -521,7 +521,7 @@ export default function Home() {
       <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
-      <section className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 py-4 md:px-6 lg:px-8">
+      <section className={`relative mx-auto flex max-w-5xl flex-col justify-center px-4 md:px-6 lg:px-8 ${!room ? "h-screen py-3" : "min-h-screen py-4"}`}>
         <div className={`mt-2 grid gap-5 lg:items-start ${room ? "lg:grid-cols-[0.85fr_1.15fr]" : "lg:grid-cols-1 lg:place-items-center"}`}>
           <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
             <div className="flex items-center justify-between gap-3">
@@ -531,6 +531,7 @@ export default function Home() {
                   <>
                     <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
                     <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy!</p>
+                    <p className="mt-2 text-xs text-white/50">powered by: taratech.web.id</p>
                   </>
                 ) : null}
 
@@ -544,8 +545,8 @@ export default function Home() {
                 <p className="text-sm text-white/70">Menyambungkan kembali...</p>
               </div>
             ) : !room ? (
-              <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : (isSignedIn ? createRoom() : undefined); }}>
-                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder={scannedRoomCode ? "Nama pemain" : isSignedIn ? "Nama host" : "Nama pemain untuk join"} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+              <form className="mt-5 space-y-3" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : (isSignedIn ? createRoom() : undefined); }}>
+                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder={scannedRoomCode ? "Nama pemain" : isSignedIn ? "Nama host" : "Nama pemain untuk join"} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
 
                 <input
                   value={scannedRoomCode || roomCodeInput}
@@ -560,22 +561,22 @@ export default function Home() {
                   autoCorrect="off"
                   spellCheck={false}
                   placeholder="Kode room untuk join"
-                  className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-3 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {!scannedRoomCode ? (
                     isSignedIn ? (
-                      <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button>
+                      <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button>
                     ) : (
                       <Show when="signed-out">
                         <SignInButton mode="modal">
-                          <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Login untuk Create Room</button>
+                          <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Login untuk Create Room</button>
                         </SignInButton>
                       </Show>
                     )
                   ) : null}
-                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
+                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black uppercase tracking-[0.25em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
             ) : null}
