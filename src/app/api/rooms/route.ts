@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { createRoom, joinRoom, kickPlayerById } from "@/lib/rooms";
 import { checkCreateRoomRateLimit, getClientIP } from "@/lib/redis";
 
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
   }
 
   if (action === "create") {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json(
+        { error: "Kamu harus login dulu untuk membuat room." },
+        { status: 401 }
+      );
+    }
+
     // Rate limiting check for createRoom
     const clientIP = getClientIP(request);
     const rateLimit = await checkCreateRoomRateLimit(clientIP);

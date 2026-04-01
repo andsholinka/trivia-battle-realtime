@@ -1,5 +1,6 @@
 "use client";
 
+import { Show, SignInButton, useUser } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 
 type Player = {
@@ -42,6 +43,7 @@ type RoomState = {
 };
 
 export default function Home() {
+  const { isSignedIn } = useUser();
   const [nickname, setNickname] = useState("");
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [room, setRoom] = useState<RoomState | null>(null);
@@ -542,8 +544,8 @@ export default function Home() {
                 <p className="text-sm text-white/70">Menyambungkan kembali...</p>
               </div>
             ) : !room ? (
-              <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : createRoom(); }}>
-                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Nama pemain" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+              <form className="mt-6 space-y-4" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : (isSignedIn ? createRoom() : undefined); }}>
+                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder={scannedRoomCode ? "Nama pemain" : isSignedIn ? "Nama host" : "Nama pemain untuk join"} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
 
                 <input
                   value={scannedRoomCode || roomCodeInput}
@@ -561,8 +563,24 @@ export default function Home() {
                   className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
 
+                {!scannedRoomCode && !isSignedIn ? (
+                  <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                    Hanya user yang sudah login yang bisa membuat room. Guest tetap bisa join room dengan kode.
+                  </div>
+                ) : null}
+
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {!scannedRoomCode ? <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button> : null}
+                  {!scannedRoomCode ? (
+                    isSignedIn ? (
+                      <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button>
+                    ) : (
+                      <Show when="signed-out">
+                        <SignInButton mode="modal">
+                          <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Login untuk Create Room</button>
+                        </SignInButton>
+                      </Show>
+                    )
+                  ) : null}
                   <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-4 text-sm font-black uppercase tracking-[0.25em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
