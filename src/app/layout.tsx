@@ -30,11 +30,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>
-          <header className="flex items-center justify-end px-4 py-3 md:px-6">
-            <Show when="signed-in">
+          <Show when="signed-in">
+            <div className="fixed right-4 top-4 z-50 md:right-6 md:top-6">
               <UserButton />
-            </Show>
-          </header>
+            </div>
+          </Show>
           {children}
         </ClerkProvider>
       </body>
