@@ -563,12 +563,6 @@ export default function Home() {
                   className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-4 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
 
-                {!scannedRoomCode && !isSignedIn ? (
-                  <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-                    Hanya user yang sudah login yang bisa membuat room. Guest tetap bisa join room dengan kode.
-                  </div>
-                ) : null}
-
                 <div className="grid gap-3 sm:grid-cols-2">
                   {!scannedRoomCode ? (
                     isSignedIn ? (
