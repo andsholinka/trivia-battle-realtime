@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import { createRoom, joinRoom, kickPlayerById } from "@/lib/rooms";
-import { checkCreateRoomRateLimit, getClientIP } from "@/lib/redis";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,31 +48,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Rate limiting check for createRoom
-    const clientIP = getClientIP(request);
-    const rateLimit = await checkCreateRoomRateLimit(clientIP);
-
-    if (!rateLimit.allowed) {
-      const minutes = Math.ceil(rateLimit.resetInSeconds / 60);
-      return Response.json(
-        {
-          error: `Rate limit exceeded. You can create up to 5 rooms per hour. Please try again in ${minutes} minute${minutes !== 1 ? "s" : ""}.`,
-          rateLimit: {
-            remaining: 0,
-            resetInSeconds: rateLimit.resetInSeconds,
-          },
-        },
-        { status: 429 }
-      );
-    }
-
     const room = await createRoom(name);
-    return Response.json({
-      ...room,
-      rateLimit: {
-        remaining: rateLimit.remaining,
-      },
-    });
+    return Response.json(room);
   }
 
   if (action === "join") {
