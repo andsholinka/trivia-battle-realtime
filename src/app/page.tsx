@@ -98,8 +98,8 @@ export default function Home() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || room || isRestoringSession || scannedRoomCode || loading || autoCreateTriggeredRef.current) return;
 
-    const defaultName = user?.firstName?.trim()
-      || user?.username?.trim()
+    const defaultName = user?.username?.trim()
+      || user?.firstName?.trim()
       || user?.primaryEmailAddress?.emailAddress?.split("@")[0]?.trim()
       || "Host";
 
