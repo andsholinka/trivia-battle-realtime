@@ -348,13 +348,10 @@ export default function Home() {
     const useCategory = cat?.trim() || category;
     const useCount = count || Number(questionCount || 5);
 
-    console.log("[Generate] Clicked", { room, currentPlayerId, useCategory, useCount });
     if (!room || !currentPlayerId) {
-      console.log("[Generate] Missing room or currentPlayerId");
       return;
     }
     if (!useCategory.trim()) {
-      console.log("[Generate] Category empty");
       setError("Kategori wajib diisi sebelum generate pertanyaan.");
       return;
     }
@@ -362,23 +359,19 @@ export default function Home() {
     try {
       setLoading(true);
       setError("");
-      console.log("[Generate] Sending request...");
       const response = await fetch(`/api/rooms/${room.code}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hostId: currentPlayerId, category: useCategory, questionCount: useCount }),
       });
       const data = await response.json();
-      console.log("[Generate] Response:", response.status, data);
       if (!response.ok) throw new Error(data.error || "Gagal generate pertanyaan.");
       setRoom(data);
       setShowSetup(false); // Hide setup view after successful generation
     } catch (err) {
-      console.error("[Generate] Error:", err);
       setError(err instanceof Error ? err.message : "Gagal generate pertanyaan.");
     } finally {
       setLoading(false);
-      console.log("[Generate] Done, loading=false");
     }
   };
 
