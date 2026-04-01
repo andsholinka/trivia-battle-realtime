@@ -521,8 +521,8 @@ export default function Home() {
       <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
-      <section className={`relative mx-auto flex max-w-5xl flex-col px-4 md:px-6 lg:px-8 ${!room ? "h-[100dvh] justify-between py-3" : "min-h-screen justify-center py-4"}`}>
-        <div className={`mt-2 grid gap-5 lg:items-start ${room ? "lg:grid-cols-[0.85fr_1.15fr]" : "lg:grid-cols-1 lg:place-items-center"}`}>
+      <section className={`relative mx-auto flex max-w-5xl flex-col px-4 md:px-6 lg:px-8 ${!room ? "h-[100dvh] py-0" : "min-h-screen justify-center py-4"}`}>
+        <div className={`grid gap-5 ${room ? "mt-2 lg:items-start lg:grid-cols-[0.85fr_1.15fr]" : "flex-1 place-content-center lg:grid-cols-1 lg:place-items-center"}`}>
           <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -1116,7 +1116,7 @@ export default function Home() {
           </section>
 
           {!room ? (
-            <footer className="pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center text-xs text-white/45">
+            <footer className="pb-[max(0.5rem,env(safe-area-inset-bottom))] text-center text-xs text-white/45">
               powered by: taratech.web.id
             </footer>
           ) : null}
