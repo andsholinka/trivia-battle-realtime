@@ -448,7 +448,8 @@ export default function Home() {
         throw new Error(data.error || "Gagal kembali ke lobby");
       }
       const data = await response.json();
-      setRoom(data);
+      setRoom(data.room ?? data);
+      setShowSetup(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal kembali ke lobby");
     } finally {
