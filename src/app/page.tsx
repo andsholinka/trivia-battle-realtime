@@ -79,6 +79,20 @@ export default function Home() {
     setCopied(false);
   }, [joinUrl]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    if (!room) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+
+    return () => {
+      document.body.classList.remove("no-scroll");
+    };
+  }, [room]);
+
   // Load saved session from localStorage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -521,7 +535,7 @@ export default function Home() {
       <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
-      <section className={`relative mx-auto flex max-w-5xl flex-col px-4 md:px-6 lg:px-8 ${!room ? "min-h-[100svh] py-4 overflow-hidden" : "min-h-screen justify-center py-4"}`}>
+      <section className={`relative mx-auto flex max-w-5xl flex-col px-4 md:px-6 lg:px-8 ${!room ? "fixed inset-0 min-h-[100dvh] justify-center py-4 overflow-hidden" : "min-h-screen justify-center py-4"}`}>
         <div className={`grid gap-5 ${room ? "mt-2 lg:items-start lg:grid-cols-[0.85fr_1.15fr]" : "flex-1 place-items-center content-center lg:grid-cols-1"}`}>
           <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
             <div className="flex items-center justify-between gap-3">
