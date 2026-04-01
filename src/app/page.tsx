@@ -510,7 +510,7 @@ export default function Home() {
   };
 
   return (
-    <main className={`relative bg-[#1a0b2e] text-white ${!room ? "h-screen overflow-hidden" : "min-h-screen overflow-hidden"}`}>
+    <main className={`relative bg-[#1a0b2e] text-white ${!room ? "h-[100dvh] overflow-hidden touch-none" : "min-h-screen overflow-hidden"}`}>
       {/* Vibrant gradient background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,107,157,0.35),transparent_25%),radial-gradient(circle_at_90%_10%,rgba(192,132,252,0.35),transparent_25%),radial-gradient(circle_at_50%_100%,rgba(34,211,238,0.35),transparent_30%),radial-gradient(circle_at_80%_80%,rgba(253,224,71,0.25),transparent_25%),linear-gradient(160deg,#1a0b2e_0%,#2d1b4e_40%,#1e3a5f_100%)]" />
       {/* Fun floating orbs */}
@@ -521,7 +521,7 @@ export default function Home() {
       <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
-      <section className={`relative mx-auto flex max-w-5xl flex-col justify-center px-4 md:px-6 lg:px-8 ${!room ? "h-screen py-3" : "min-h-screen py-4"}`}>
+      <section className={`relative mx-auto flex max-w-5xl flex-col px-4 md:px-6 lg:px-8 ${!room ? "h-[100dvh] justify-between py-3" : "min-h-screen justify-center py-4"}`}>
         <div className={`mt-2 grid gap-5 lg:items-start ${room ? "lg:grid-cols-[0.85fr_1.15fr]" : "lg:grid-cols-1 lg:place-items-center"}`}>
           <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
             <div className="flex items-center justify-between gap-3">
@@ -531,7 +531,6 @@ export default function Home() {
                   <>
                     <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
                     <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy!</p>
-                    <p className="mt-2 text-xs text-white/50">powered by: taratech.web.id</p>
                   </>
                 ) : null}
 
@@ -1115,6 +1114,12 @@ export default function Home() {
 
             {error ? <div className="mt-4 rounded-[1.4rem] border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
           </section>
+
+          {!room ? (
+            <footer className="pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center text-xs text-white/45">
+              powered by: taratech.web.id
+            </footer>
+          ) : null}
 
           {room && room.status !== "lobby" ? (
             <section className="rounded-[2.2rem] border border-white/10 bg-white/8 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:p-6">
