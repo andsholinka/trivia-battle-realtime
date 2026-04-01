@@ -595,7 +595,7 @@ export default function Home() {
               </div>
             ) : !room ? (
               <form className="mt-5 space-y-3" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : (isSignedIn ? createRoom() : undefined); }}>
-                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder={scannedRoomCode ? "Nama pemain" : isSignedIn ? "Nama host" : "Nama pemain untuk join"} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
+                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Username" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
 
                 <input
                   value={scannedRoomCode || roomCodeInput}
@@ -609,23 +609,23 @@ export default function Home() {
                   autoCapitalize="characters"
                   autoCorrect="off"
                   spellCheck={false}
-                  placeholder="Kode room untuk join"
+                  placeholder="Room Code"
                   className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-3 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
 
                 <div className="grid gap-3 sm:grid-cols-2">
+                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join the Party!"}</button>
                   {!scannedRoomCode ? (
                     isSignedIn ? (
-                      <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room"}</button>
+                      <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room!"}</button>
                     ) : (
                       <Show when="signed-out">
                         <SignInButton mode="modal">
-                          <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Login untuk Create Room</button>
+                          <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Login to Create Room!</button>
                         </SignInButton>
                       </Show>
                     )
                   ) : null}
-                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black uppercase tracking-[0.25em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : scannedRoomCode ? "Join Sekarang" : "Join Room"}</button>
                 </div>
               </form>
             ) : null}
