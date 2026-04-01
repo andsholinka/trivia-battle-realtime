@@ -730,13 +730,13 @@ export default function Home() {
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || room.players.length < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60 md:text-sm">{loading ? "Loading..." : "Start Game"}</button>
+                      <button type="button" onClick={startGame} disabled={loading || !room.questionsReady || (room.players?.length ?? 0) < 2} className="rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-60 md:text-sm">{loading ? "Loading..." : "Start Game"}</button>
                     </div>
                   </div>
                 ) : null}
 
                 {/* Player Lobby Showcase - Visible to NON-HOST players in lobby */}
-                {room?.status === "lobby" && room.players.length > 0 && !amIHost ? (
+                {room?.status === "lobby" && (room.players?.length ?? 0) > 0 && !amIHost ? (
                   <div className="relative overflow-hidden rounded-[1.8rem] border border-cyan-300/20 bg-gradient-to-br from-slate-900/80 via-purple-900/20 to-slate-900/80 p-5 shadow-2xl shadow-cyan-500/10">
                     {/* Animated background glow */}
                     <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl animate-pulse"></div>
@@ -750,7 +750,7 @@ export default function Home() {
                         </div>
                         <div>
                           <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/70">Players Ready</p>
-                          <p className="text-lg font-black text-white">{room.players.length} Pemain Bergabung</p>
+                          <p className="text-lg font-black text-white">{room.players?.length ?? 0} Pemain Bergabung</p>
                         </div>
                       </div>
                       {/* Live pulse indicator */}
@@ -765,7 +765,7 @@ export default function Home() {
                     
                     {/* Players Grid */}
                     <div className="relative mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                      {room.players.map((p, idx) => (
+                      {(room.players ?? []).map((p, idx) => (
                         <div
                           key={p.id}
                           className={`group relative overflow-hidden rounded-2xl border p-3 transition-all duration-300 hover:scale-105 ${
@@ -900,11 +900,11 @@ export default function Home() {
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
                         <span className="text-base">👥</span>
-                        Pemain ({room.players.length})
+                        Pemain ({room.players?.length ?? 0})
                       </h4>
                     </div>
                     <ul className="mt-3 grid gap-2">
-                      {room.players.map((p) => (
+                      {(room.players ?? []).map((p) => (
                         <li
                           key={p.id}
                           className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition ${
@@ -1126,7 +1126,7 @@ export default function Home() {
                   <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Live Leaderboard</p>
                   <h3 className="mt-2 text-2xl font-black text-white">Klasemen Pemain</h3>
                 </div>
-                <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room.players.length} pemain</div>
+                <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-sm font-black text-white/70">{room.players?.length ?? 0} pemain</div>
               </div>
               <div className="mt-5 space-y-3">
                 {sortedPlayers.length > 0 ? sortedPlayers.map((player, index) => {
