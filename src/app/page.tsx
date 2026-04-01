@@ -894,8 +894,8 @@ export default function Home() {
                   </div>
                 ) : null}
 
-                {/* Player List - Show to ALL in lobby */}
-                {room?.status === "lobby" ? (
+                {/* Player List - Show in lobby, except for NON-HOST players before game starts */}
+                {room?.status === "lobby" && amIHost ? (
                   <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 md:p-4">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
