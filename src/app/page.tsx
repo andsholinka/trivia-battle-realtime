@@ -43,7 +43,7 @@ type RoomState = {
 };
 
 export default function Home() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [nickname, setNickname] = useState("");
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [room, setRoom] = useState<RoomState | null>(null);
@@ -92,6 +92,23 @@ export default function Home() {
       document.body.classList.remove("no-scroll");
     };
   }, [room]);
+
+  useEffect(() => {
+    if (!isSignedIn || room || isRestoringSession || scannedRoomCode || loading) return;
+
+    const defaultName = user?.firstName?.trim()
+      || user?.username?.trim()
+      || user?.primaryEmailAddress?.emailAddress?.split("@")[0]?.trim()
+      || "Host";
+
+    setNickname((current) => current.trim() || defaultName);
+
+    const timer = setTimeout(() => {
+      void createRoom(defaultName);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [isSignedIn, user, room, isRestoringSession, scannedRoomCode, loading]);
 
   // Load saved session from localStorage on mount
   useEffect(() => {
@@ -286,8 +303,8 @@ export default function Home() {
   const second = topThree[1];
   const first = topThree[0];
 
-  const createRoom = async () => {
-    const safeNickname = nickname.replace(/\s+/g, " ").trim();
+  const createRoom = async (overrideName?: string) => {
+    const safeNickname = (overrideName ?? nickname).replace(/\s+/g, " ").trim();
     if (!safeNickname) {
       setError("Masukkan nama pemain dulu.");
       return;
