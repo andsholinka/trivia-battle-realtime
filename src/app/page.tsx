@@ -263,12 +263,6 @@ export default function Home() {
 
   const sortedPlayers = useMemo(() => [...(room?.players ?? [])].sort((a, b) => b.score - a.score), [room?.players]);
   const me = room?.players?.find((player) => player.id === currentPlayerId) ?? null;
-  // Debug: log me state when room status changes to question or leaderboard
-  useEffect(() => {
-    if (room?.status === "question" || room?.status === "leaderboard") {
-      console.log("[Debug] me state:", { me, currentPlayerId, hasAnswered: me?.hasAnswered, players: room?.players?.map(p => ({ id: p.id, name: p.name, hasAnswered: p.hasAnswered })) });
-    }
-  }, [room?.status, me, currentPlayerId, room?.players]);
   const amIHost = Boolean(room && currentPlayerId && room.hostId === currentPlayerId);
   const effectiveRoomCode = scannedRoomCode || roomCodeInput;
   const topThree = sortedPlayers.slice(0, 3);
@@ -497,23 +491,19 @@ export default function Home() {
   };
 
   const submitAnswer = async (answer: string) => {
-    console.log("[Answer] Clicked:", { answer, currentPlayerId, roomCode: room?.code });
     if (!room || !currentPlayerId || selectedAnswer) {
-      console.log("[Answer] Blocked:", { hasRoom: !!room, hasPlayerId: !!currentPlayerId, selectedAnswer });
       return;
     }
 
     try {
       setSelectedAnswer(answer);
       setError("");
-      console.log("[Answer] Sending to API...");
       const response = await fetch(`/api/rooms/${room.code}/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playerId: currentPlayerId, answer }),
       });
       const data = await response.json();
-      console.log("[Answer] API response:", response.status, data);
       if (!response.ok) throw new Error(data.error || "Gagal mengirim jawaban.");
       setRoom(data);
     } catch (err) {
