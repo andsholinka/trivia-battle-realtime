@@ -621,14 +621,14 @@ export default function Home() {
                 {!room && !isRestoringSession ? (
                   <>
                     <h1 
-                      className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-5xl font-black leading-tight text-transparent md:text-7xl drop-shadow-2xl"
-                      style={{ fontFamily: "'Fredoka', sans-serif" }}
+                      className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-6xl font-black leading-tight text-transparent md:text-8xl drop-shadow-2xl tracking-tight"
+                      style={{ fontFamily: "var(--font-outfit)" }}
                     >
                       Quizzy
                     </h1>
                     <p 
-                      className="mt-2 text-base font-black italic text-yellow-300 md:text-lg drop-shadow-lg animate-pulse"
-                      style={{ fontFamily: "'Fredoka', sans-serif" }}
+                      className="mt-3 text-lg font-bold text-yellow-300 md:text-2xl drop-shadow-lg animate-pulse tracking-wide"
+                      style={{ fontFamily: "var(--font-space-grotesk)" }}
                     >
                       Get Bizzy or Be Dizzy!
                     </p>

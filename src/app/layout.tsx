@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
-import { Geist, Geist_Mono, Poppins, Fredoka } from "next/font/google";
+import { Geist, Geist_Mono, Poppins, Fredoka, Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,6 +25,18 @@ const fredoka = Fredoka({
   weight: ["400", "500", "600", "700"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Quizzy - Get Bizzy or Be Dizzy!",
   description: "Game quiz multiplayer seru dan penuh warna! Get Bizzy or Be Dizzy! 🎉",
@@ -38,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${fredoka.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${fredoka.variable} ${outfit.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>
