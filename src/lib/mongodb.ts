@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, MongoClientOptions } from "mongodb";
 
 type GlobalWithMongo = typeof globalThis & {
   _mongoClientPromise?: Promise<MongoClient>;
@@ -14,7 +14,15 @@ export default function getMongoClientPromise() {
       throw new Error("MONGODB_URI belum diset.");
     }
 
-    const client = new MongoClient(uri);
+    const options: MongoClientOptions = {
+      // Tambahkan timeout dan retry options
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      // Untuk mengatasi masalah DNS di Windows
+      family: 4, // Force IPv4
+    };
+
+    const client = new MongoClient(uri, options);
     globalWithMongo._mongoClientPromise = client.connect();
   }
 

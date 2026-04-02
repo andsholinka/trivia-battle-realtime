@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 // Icons
 const Icons = {
@@ -111,6 +112,7 @@ interface Stats {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [code, setCode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -227,6 +229,7 @@ export default function AdminPage() {
     setRooms([]);
     setStats(null);
     setSelectedRooms(new Set());
+    router.push("/");
   };
 
   useEffect(() => {

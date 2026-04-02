@@ -63,6 +63,8 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [verifiedRoomCode, setVerifiedRoomCode] = useState("");
 
   // Safety: reset loading jika stuck (max 10 detik)
   useEffect(() => {
@@ -361,11 +363,38 @@ export default function Home() {
     }
   };
 
+  const verifyRoomCode = async () => {
+    const safeRoomCode = effectiveRoomCode.replace(/\s+/g, "").trim().toUpperCase();
+    if (!safeRoomCode) {
+      setError("Kode room wajib diisi.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      // Check if room exists
+      const response = await fetch(`/api/rooms/${safeRoomCode}`, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Room tidak ditemukan.");
+      }
+      const data = await response.json();
+      if (data.code) {
+        // Room exists, show username modal
+        setVerifiedRoomCode(safeRoomCode);
+        setShowUsernameModal(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Room tidak ditemukan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const joinRoom = async () => {
     const safeNickname = nickname.replace(/\s+/g, " ").trim();
-    const safeRoomCode = effectiveRoomCode.replace(/\s+/g, "").trim().toUpperCase();
-    if (!safeNickname || !safeRoomCode) {
-      setError("Nama pemain dan kode room wajib diisi.");
+    if (!safeNickname) {
+      setError("Nama pemain wajib diisi.");
       return;
     }
 
@@ -375,7 +404,7 @@ export default function Home() {
       const response = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "join", name: safeNickname, code: safeRoomCode }),
+        body: JSON.stringify({ action: "join", name: safeNickname, code: verifiedRoomCode }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal join room.");
@@ -386,9 +415,11 @@ export default function Home() {
       // Persist session to localStorage for reconnection on refresh
       if (typeof window !== "undefined" && playerId) {
         localStorage.setItem("quizzy_playerId", playerId);
-        localStorage.setItem("quizzy_roomCode", safeRoomCode);
+        localStorage.setItem("quizzy_roomCode", verifiedRoomCode);
         localStorage.setItem("quizzy_nickname", safeNickname);
       }
+      // Close modal after successful join
+      setShowUsernameModal(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal join room.");
     } finally {
@@ -561,25 +592,29 @@ export default function Home() {
 
   return (
     <main className={`relative bg-[#1a0b2e] text-white ${!room ? "h-[100dvh] overflow-hidden touch-none" : "min-h-screen overflow-hidden"}`}>
-      {/* Vibrant gradient background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(255,107,157,0.35),transparent_25%),radial-gradient(circle_at_90%_10%,rgba(192,132,252,0.35),transparent_25%),radial-gradient(circle_at_50%_100%,rgba(34,211,238,0.35),transparent_30%),radial-gradient(circle_at_80%_80%,rgba(253,224,71,0.25),transparent_25%),linear-gradient(160deg,#1a0b2e_0%,#2d1b4e_40%,#1e3a5f_100%)]" />
-      {/* Fun floating orbs */}
-      <div className="absolute -top-20 left-10 h-56 w-56 rounded-full bg-pink-500/30 blur-3xl animate-pulse" />
-      <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-purple-400/25 blur-3xl" />
-      <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-400/25 blur-3xl" />
-      <div className="absolute right-20 bottom-20 h-48 w-48 rounded-full bg-yellow-400/20 blur-3xl" />
-      <div className="absolute left-1/4 top-1/2 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl" />
+      {/* Vibrant gradient background - more colorful and fun */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,107,157,0.4),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(192,132,252,0.4),transparent_30%),radial-gradient(circle_at_50%_90%,rgba(34,211,238,0.4),transparent_35%),radial-gradient(circle_at_70%_70%,rgba(253,224,71,0.3),transparent_30%),linear-gradient(160deg,#1a0b2e_0%,#2d1b4e_40%,#1e3a5f_100%)]" />
+      {/* Fun floating orbs - more vibrant */}
+      <div className="absolute -top-20 left-10 h-64 w-64 rounded-full bg-pink-500/40 blur-3xl animate-pulse" />
+      <div className="absolute right-0 top-20 h-80 w-80 rounded-full bg-purple-400/35 blur-3xl animate-pulse delay-700" />
+      <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-cyan-400/35 blur-3xl animate-pulse delay-1000" />
+      <div className="absolute right-20 bottom-20 h-56 w-56 rounded-full bg-yellow-400/30 blur-3xl animate-pulse delay-500" />
+      <div className="absolute left-1/4 top-1/2 h-40 w-40 rounded-full bg-orange-400/30 blur-3xl animate-pulse delay-300" />
       <div className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:46px_46px]" />
 
       <section className={`relative mx-auto flex max-w-5xl flex-col px-4 md:px-6 lg:px-8 ${!room ? "fixed inset-0 min-h-[100dvh] justify-center py-4 overflow-hidden" : "min-h-screen justify-center py-4"}`}>
         <div className={`grid gap-5 ${room ? "mt-2 lg:items-start lg:grid-cols-[0.85fr_1.15fr]" : "flex-1 place-items-center content-center lg:grid-cols-1"}`}>
-          <section className={`flex flex-col justify-center rounded-[2rem] border border-white/10 bg-white/8 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:p-5 ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
-            <div className="flex items-center justify-between gap-3">
+          <section className={`flex flex-col justify-center ${room ? "" : "w-full max-w-md lg:max-w-lg"}`}>
+            <div className="flex flex-col items-center justify-center text-center gap-3">
               <div>
                 {!room && !isRestoringSession ? (
                   <>
-                    <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-3xl font-black leading-none text-transparent md:text-5xl">Quizzy</h1>
-                    <p className="mt-1 text-xs font-bold italic text-yellow-300 md:text-sm">Get Bizzy or Be Dizzy!</p>
+                    <h1 className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-5xl font-black leading-tight text-transparent md:text-7xl drop-shadow-2xl">
+                      Quizzy
+                    </h1>
+                    <p className="mt-2 text-base font-black italic text-yellow-300 md:text-lg drop-shadow-lg animate-pulse">
+                      Get Bizzy or Be Dizzy!
+                    </p>
                   </>
                 ) : null}
               </div>
@@ -587,13 +622,11 @@ export default function Home() {
 
             {isRestoringSession ? (
               <div className="mt-10 flex flex-col items-center justify-center space-y-4">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-cyan-400" />
-                <p className="text-sm text-white/70">Menyambungkan kembali...</p>
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-cyan-400" />
+                <p className="text-base text-white/70">Menyambungkan kembali...</p>
               </div>
             ) : !room ? (
-              <form className="mt-5 space-y-3" onSubmit={(e) => { e.preventDefault(); scannedRoomCode ? joinRoom() : (isSignedIn ? createRoom() : undefined); }}>
-                <input value={nickname} onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }} autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Username" className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-cyan-300/50" />
-
+              <form className="mt-8 space-y-5" onSubmit={(e) => { e.preventDefault(); verifyRoomCode(); }} style={{ fontFamily: "'Poppins', sans-serif" }}>
                 <input
                   value={scannedRoomCode || roomCodeInput}
                   onChange={(e) => {
@@ -606,17 +639,40 @@ export default function Home() {
                   autoCapitalize="characters"
                   autoCorrect="off"
                   spellCheck={false}
-                  placeholder="Room Code"
-                  className="w-full rounded-3xl border border-white/10 bg-black/25 px-5 py-3 text-base uppercase tracking-[0.2em] text-white outline-none placeholder:text-white/35 focus:border-fuchsia-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="ROOM CODE"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                  className="w-full rounded-[2rem] border-2 border-purple-400/40 bg-purple-900/40 px-6 py-4 text-center text-lg font-bold uppercase tracking-[0.25em] text-white outline-none placeholder:text-purple-300/50 focus:border-cyan-400/70 focus:bg-purple-900/60 transition-all shadow-xl shadow-purple-500/20 backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-purple-500/30"
                 />
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button type="button" disabled={loading || !nickname.trim()} onClick={joinRoom} className="rounded-3xl border border-white/20 bg-white/10 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white backdrop-blur-sm transition hover:bg-white/20 disabled:opacity-60">{loading ? "Loading..." : "Join the Party!"}</button>
+                <div className="space-y-4 pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={loading || !effectiveRoomCode.trim()} 
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                    className="w-full rounded-[2rem] border-2 border-white/40 bg-white/20 px-6 py-4 text-base font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition-all hover:bg-white/30 hover:scale-[1.03] hover:shadow-2xl hover:shadow-white/20 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+                  >
+                    {loading ? "⏳ Checking..." : "🎉 JOIN THE PARTY!"}
+                  </button>
+                  
                   {isSignedIn ? (
-                    <button type="submit" disabled={loading} className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30 disabled:opacity-60">{loading ? "Loading..." : "Create Room!"}</button>
+                    <button 
+                      type="button"
+                      onClick={() => createRoom()}
+                      disabled={loading}
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                      className="w-full rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-6 py-4 text-base font-black uppercase tracking-[0.12em] text-white shadow-2xl shadow-pink-500/50 transition-all hover:shadow-pink-500/70 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "⏳ Creating..." : "✨ CREATE ROOM!"}
+                    </button>
                   ) : (
                     <SignInButton mode="modal">
-                      <button type="button" className="rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3.5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-pink-500/25 transition hover:shadow-xl hover:shadow-purple-500/30">Create Room!</button>
+                      <button 
+                        type="button"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
+                        className="w-full rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-6 py-4 text-base font-black uppercase tracking-[0.12em] text-white shadow-2xl shadow-pink-500/50 transition-all hover:shadow-pink-500/70 hover:scale-[1.03] active:scale-[0.97]"
+                      >
+                        ✨ CREATE ROOM!
+                      </button>
                     </SignInButton>
                   )}
                 </div>
@@ -1177,8 +1233,68 @@ export default function Home() {
               </div>
             )}
 
-            {error ? <div className="mt-4 rounded-[1.4rem] border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
+            {error ? (
+              <div className="mt-4 rounded-2xl border-2 border-rose-400/30 bg-gradient-to-r from-rose-500/20 to-pink-500/20 px-5 py-3.5 text-sm text-rose-100 shadow-lg shadow-rose-500/20 backdrop-blur-sm animate-pulse">
+                <span className="font-bold">⚠️ Oops!</span> {error}
+              </div>
+            ) : null}
           </section>
+
+          {/* Username Modal */}
+          {showUsernameModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+              <div className="w-full max-w-md rounded-[2rem] border-2 border-purple-400/40 bg-gradient-to-br from-purple-900/95 to-indigo-900/95 p-8 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in duration-300">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-black text-white mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    🎮 Enter Your Name
+                  </h2>
+                  <p className="text-sm text-purple-200">
+                    Room: <span className="font-bold text-cyan-300">{verifiedRoomCode}</span>
+                  </p>
+                </div>
+
+                <form onSubmit={(e) => { e.preventDefault(); joinRoom(); }} className="space-y-4">
+                  <input
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => { setNickname(e.target.value); if (error) setError(""); }}
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="Your Username"
+                    autoFocus
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                    className="w-full rounded-[1.5rem] border-2 border-purple-400/40 bg-purple-900/40 px-5 py-3.5 text-base text-white outline-none placeholder:text-purple-300/50 focus:border-pink-400/70 focus:bg-purple-900/60 transition-all shadow-lg shadow-purple-500/20 backdrop-blur-md"
+                  />
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUsernameModal(false);
+                        setVerifiedRoomCode("");
+                        setNickname("");
+                        setError("");
+                      }}
+                      disabled={loading}
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                      className="flex-1 rounded-[1.5rem] border-2 border-white/30 bg-white/10 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading || !nickname.trim()}
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                      className="flex-1 rounded-[1.5rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-5 py-3 text-sm font-black uppercase tracking-wider text-white shadow-xl shadow-pink-500/40 transition-all hover:shadow-pink-500/60 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "⏳ Joining..." : "🎉 Join!"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {!room ? (
             <footer className="pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-center text-xs text-white/45">
