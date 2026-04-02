@@ -65,6 +65,7 @@ export default function Home() {
   const [isRestoringSession, setIsRestoringSession] = useState(false);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [verifiedRoomCode, setVerifiedRoomCode] = useState("");
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   // Safety: reset loading jika stuck (max 10 detik)
   useEffect(() => {
@@ -366,7 +367,12 @@ export default function Home() {
   const verifyRoomCode = async () => {
     const safeRoomCode = effectiveRoomCode.replace(/\s+/g, "").trim().toUpperCase();
     if (!safeRoomCode) {
-      setError("Kode room wajib diisi.");
+      setError("Room code is required.");
+      setShowErrorModal(true);
+      // Vibrate phone if supported
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([100, 50, 100, 50, 100]);
+      }
       return;
     }
 
@@ -376,7 +382,7 @@ export default function Home() {
       // Check if room exists
       const response = await fetch(`/api/rooms/${safeRoomCode}`, { cache: "no-store" });
       if (!response.ok) {
-        throw new Error("Room tidak ditemukan.");
+        throw new Error("Room not found.");
       }
       const data = await response.json();
       if (data.code) {
@@ -385,7 +391,12 @@ export default function Home() {
         setShowUsernameModal(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Room tidak ditemukan.");
+      setError(err instanceof Error ? err.message : "Room not found.");
+      setShowErrorModal(true);
+      // Vibrate phone if supported - longer pattern for error
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 200]);
+      }
     } finally {
       setLoading(false);
     }
@@ -633,32 +644,36 @@ export default function Home() {
               </div>
             ) : !room ? (
               <form className="mt-8 space-y-5" onSubmit={(e) => { e.preventDefault(); verifyRoomCode(); }} style={{ fontFamily: "'Poppins', sans-serif" }}>
-                <input
-                  value={scannedRoomCode || roomCodeInput}
-                  onChange={(e) => {
-                    if (!scannedRoomCode) {
-                      setRoomCodeInput(e.target.value.toUpperCase());
-                      if (error) setError("");
-                    }
-                  }}
-                  disabled={Boolean(scannedRoomCode)}
-                  autoCapitalize="characters"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder="ROOM CODE"
-                  maxLength={6}
-                  style={{ fontFamily: "'Poppins', sans-serif" }}
-                  className="w-full rounded-[2rem] border-2 border-purple-400/40 bg-purple-900/40 px-6 py-4 text-center text-lg font-bold uppercase tracking-[0.25em] text-white outline-none placeholder:text-purple-300/50 focus:border-cyan-400/70 focus:bg-purple-900/60 transition-all shadow-xl shadow-purple-500/20 backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-purple-500/30"
-                />
+                {/* Room Code Input with Fun Styling */}
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-[2.2rem] blur-lg opacity-50 group-hover:opacity-75 transition duration-300 animate-pulse"></div>
+                  <input
+                    value={scannedRoomCode || roomCodeInput}
+                    onChange={(e) => {
+                      if (!scannedRoomCode) {
+                        setRoomCodeInput(e.target.value.toUpperCase());
+                        if (error) setError("");
+                      }
+                    }}
+                    disabled={Boolean(scannedRoomCode)}
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="ENTER CODE"
+                    maxLength={6}
+                    style={{ fontFamily: "'Fredoka', sans-serif" }}
+                    className="relative w-full rounded-[2rem] border-2 border-purple-400/60 bg-gradient-to-br from-purple-900/60 to-indigo-900/60 px-6 py-5 text-center text-2xl font-bold uppercase tracking-[0.4em] text-white outline-none placeholder:text-purple-300/60 focus:border-cyan-400/80 focus:bg-gradient-to-br focus:from-purple-900/80 focus:to-indigo-900/80 focus:ring-4 focus:ring-cyan-400/30 transition-all shadow-2xl shadow-purple-500/30 backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-purple-500/50 hover:scale-[1.02]"
+                  />
+                </div>
 
                 <div className="space-y-4 pt-2">
                   <button 
                     type="submit" 
-                    disabled={loading || !effectiveRoomCode.trim()} 
+                    disabled={loading || effectiveRoomCode.trim().length !== 6} 
                     style={{ fontFamily: "'Poppins', sans-serif" }}
                     className="w-full rounded-[2rem] border-2 border-white/40 bg-white/20 px-6 py-4 text-base font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition-all hover:bg-white/30 hover:scale-[1.03] hover:shadow-2xl hover:shadow-white/20 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
                   >
-                    {loading ? "⏳ Checking..." : "🎉 JOIN THE PARTY!"}
+                    {loading ? "⏳ Checking..." : "JOIN THE PARTY! 🚀"}
                   </button>
                   
                   {isSignedIn ? (
@@ -666,19 +681,19 @@ export default function Home() {
                       type="button"
                       onClick={() => createRoom()}
                       disabled={loading}
-                      style={{ fontFamily: "'Poppins', sans-serif" }}
-                      className="w-full rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-6 py-4 text-base font-black uppercase tracking-[0.12em] text-white shadow-2xl shadow-pink-500/50 transition-all hover:shadow-pink-500/70 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ fontFamily: "'Fredoka', sans-serif" }}
+                      className="w-full rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-6 py-4 text-lg font-bold uppercase tracking-[0.15em] text-white shadow-2xl shadow-pink-500/50 transition-all hover:shadow-pink-500/70 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? "⏳ Creating..." : "✨ CREATE ROOM!"}
+                      {loading ? "⏳ Creating..." : "CREATE ROOM!"}
                     </button>
                   ) : (
                     <SignInButton mode="modal">
                       <button 
                         type="button"
-                        style={{ fontFamily: "'Poppins', sans-serif" }}
-                        className="w-full rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-6 py-4 text-base font-black uppercase tracking-[0.12em] text-white shadow-2xl shadow-pink-500/50 transition-all hover:shadow-pink-500/70 hover:scale-[1.03] active:scale-[0.97]"
+                        style={{ fontFamily: "'Fredoka', sans-serif" }}
+                        className="w-full rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 px-6 py-4 text-lg font-bold uppercase tracking-[0.15em] text-white shadow-2xl shadow-pink-500/50 transition-all hover:shadow-pink-500/70 hover:scale-[1.03] active:scale-[0.97]"
                       >
-                        ✨ CREATE ROOM!
+                        CREATE ROOM!
                       </button>
                     </SignInButton>
                   )}
@@ -1240,12 +1255,37 @@ export default function Home() {
               </div>
             )}
 
-            {error ? (
-              <div className="mt-4 rounded-2xl border-2 border-rose-400/30 bg-gradient-to-r from-rose-500/20 to-pink-500/20 px-5 py-3.5 text-sm text-rose-100 shadow-lg shadow-rose-500/20 backdrop-blur-sm animate-pulse">
-                <span className="font-bold">⚠️ Oops!</span> {error}
-              </div>
-            ) : null}
+            {/* Error message removed - now using modal */}
           </section>
+
+          {/* Error Modal */}
+          {showErrorModal && error && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+              <div className="w-full max-w-sm rounded-[2rem] border-2 border-rose-400/50 bg-gradient-to-br from-rose-900/95 to-red-900/95 p-8 shadow-2xl backdrop-blur-xl animate-shake">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/20 animate-pulse">
+                    <span className="text-5xl">⚠️</span>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-3" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                    Oops!
+                  </h2>
+                  <p className="text-base text-rose-100 mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    {error}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowErrorModal(false);
+                      setError("");
+                    }}
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                    className="w-full rounded-[1.5rem] bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3 text-sm font-black uppercase tracking-wider text-white shadow-xl shadow-rose-500/40 transition-all hover:shadow-rose-500/60 hover:scale-105 active:scale-95"
+                  >
+                    Got it!
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Username Modal */}
           {showUsernameModal && (
