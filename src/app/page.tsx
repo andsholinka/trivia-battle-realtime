@@ -640,6 +640,7 @@ export default function Home() {
                   autoCorrect="off"
                   spellCheck={false}
                   placeholder="ROOM CODE"
+                  maxLength={6}
                   style={{ fontFamily: "'Poppins', sans-serif" }}
                   className="w-full rounded-[2rem] border-2 border-purple-400/40 bg-purple-900/40 px-6 py-4 text-center text-lg font-bold uppercase tracking-[0.25em] text-white outline-none placeholder:text-purple-300/50 focus:border-cyan-400/70 focus:bg-purple-900/60 transition-all shadow-xl shadow-purple-500/20 backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-purple-500/30"
                 />
