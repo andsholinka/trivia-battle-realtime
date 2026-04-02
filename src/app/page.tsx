@@ -705,66 +705,86 @@ export default function Home() {
               <div className="mt-6 space-y-4">
 
                 {amIHost && room.status === "lobby" ? (
-                  <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-black/20 p-3">
+                  <div className="space-y-4">
                     {/* Question Configuration Form - Only show when category not yet set */}
                     {!room.category ? (
-                      <div className="space-y-3 rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/5 p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">⚙️</span>
-                          <p className="text-sm font-bold text-amber-200">Konfigurasi Pertanyaan</p>
-                        </div>
+                      <div className="relative overflow-hidden rounded-[2rem] border-2 border-amber-400/40 bg-gradient-to-br from-amber-500/20 via-orange-500/15 to-yellow-500/10 p-6 backdrop-blur-sm">
+                        {/* Decorative glow */}
+                        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-400/20 blur-3xl"></div>
+                        <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-orange-400/20 blur-3xl"></div>
                         
-                        {/* Category Input */}
-                        <div className="space-y-1">
-                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Kategori Pertanyaan</p>
-                          <input
-                            type="text"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            placeholder="Bebas apapun!"
-                            className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-400 focus:outline-none"
-                          />
-                        </div>
-                        
-                        {/* Question Count Selection */}
-                        <div className="space-y-1">
-                          <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Jumlah Pertanyaan</p>
-                          <div className="flex gap-2">
-                            {[5, 10, 15, 20].map((num) => (
-                              <button
-                                key={num}
-                                type="button"
-                                onClick={() => setQuestionCount(num.toString())}
-                                className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold transition ${
-                                  questionCount === num.toString()
-                                    ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-orange-500/25"
-                                    : "bg-white/10 border border-white/20 text-white hover:bg-white/20"
-                                }`}
-                              >
-                                {num}
-                              </button>
-                            ))}
+                        <div className="relative space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
+                              <span className="text-2xl">⚙️</span>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-black text-white" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                                Question Setup
+                              </h3>
+                              <p className="text-xs text-amber-200/80">Configure your trivia game</p>
+                            </div>
                           </div>
+                          
+                          {/* Category Input */}
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-amber-200" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                              Category
+                            </label>
+                            <input
+                              type="text"
+                              value={category}
+                              onChange={(e) => setCategory(e.target.value)}
+                              placeholder="Any topic you want!"
+                              style={{ fontFamily: "'Poppins', sans-serif" }}
+                              className="w-full rounded-2xl border-2 border-amber-400/30 bg-white/10 px-4 py-3 text-base text-white placeholder:text-white/40 focus:border-amber-400/60 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-amber-400/20 backdrop-blur-sm transition-all"
+                            />
+                          </div>
+                          
+                          {/* Question Count Selection */}
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-amber-200" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                              Number of Questions
+                            </label>
+                            <div className="grid grid-cols-4 gap-2">
+                              {[5, 10, 15, 20].map((num) => (
+                                <button
+                                  key={num}
+                                  type="button"
+                                  onClick={() => setQuestionCount(num.toString())}
+                                  style={{ fontFamily: "'Fredoka', sans-serif" }}
+                                  className={`rounded-2xl px-4 py-3 text-lg font-bold transition-all ${
+                                    questionCount === num.toString()
+                                      ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-xl shadow-orange-500/40 scale-105"
+                                      : "bg-white/10 border-2 border-white/20 text-white/70 hover:bg-white/20 hover:text-white hover:scale-105"
+                                  }`}
+                                >
+                                  {num}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Generate Button */}
+                          <button
+                            type="button"
+                            onClick={() => generateQuestions(category, parseInt(questionCount) || 5)}
+                            disabled={loading || !category.trim()}
+                            style={{ fontFamily: "'Fredoka', sans-serif" }}
+                            className="w-full rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 px-6 py-4 text-base font-bold uppercase tracking-wider text-white shadow-2xl shadow-orange-500/50 transition-all hover:shadow-orange-500/70 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loading ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="h-5 w-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                Generating Magic...
+                              </span>
+                            ) : (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="text-xl">✨</span> Generate Questions
+                              </span>
+                            )}
+                          </button>
                         </div>
-                        
-                        {/* Generate Button */}
-                        <button
-                          type="button"
-                          onClick={() => generateQuestions(category, parseInt(questionCount) || 5)}
-                          disabled={loading || !category.trim()}
-                          className="w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-orange-500/25 transition hover:shadow-xl hover:shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {loading ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Generating...
-                            </span>
-                          ) : (
-                            <span className="flex items-center justify-center gap-2">
-                              <span>✨</span> Generate Pertanyaan
-                            </span>
-                          )}
-                        </button>
                       </div>
                     ) : (
                       /* Category set - show ready state with reset option */
@@ -801,48 +821,77 @@ export default function Home() {
                       </div>
                     )}
                     
-                    {/* Streak Bonus Toggle */}
-                    <div className="rounded-2xl border border-orange-300/30 bg-gradient-to-r from-orange-400/20 via-amber-500/10 to-yellow-400/20 p-3 sm:p-4">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-lg shadow-orange-500/30">
-                            <span className="text-xl sm:text-2xl">🔥</span>
+                    {/* Streak Bonus Toggle - Upgraded */}
+                    <div className="relative overflow-hidden rounded-[2rem] border-2 border-orange-400/40 bg-gradient-to-br from-orange-500/25 via-amber-500/20 to-rose-500/15 p-6 backdrop-blur-sm">
+                      {/* Decorative glowing orbs */}
+                      <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-orange-400/30 blur-3xl"></div>
+                      <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-amber-400/25 blur-3xl"></div>
+                      
+                      <div className="relative space-y-4">
+                        {/* Header with fire icon and title */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-xl shadow-orange-500/40 animate-pulse">
+                              <span className="text-3xl">🔥</span>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-black text-white" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                                Streak Bonus
+                              </h3>
+                              <p className="text-xs text-orange-200/90">Extra points for consecutive correct answers</p>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-black text-white">Streak Bonus</p>
-                            <p className="text-xs text-orange-200/80">Bonus bertambah tiap jawaban benar berturut-turut</p>
-                            <p className="mt-0.5 sm:mt-1 text-[10px] text-amber-300/90">+5 (3x) • +10 (5x) • +15 (7x) • +25 (10x)</p>
+                          
+                          {/* Large Toggle Switch */}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setLoading(true);
+                              try {
+                                const res = await fetch(`/api/rooms/${room.code}/toggle-streak`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ hostId: currentPlayerId }),
+                                });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  if (data.room) {
+                                    setRoom(data.room);
+                                  }
+                                }
+                              } finally {
+                                setLoading(false);
+                              }
+                            }}
+                            disabled={loading}
+                            className={`relative h-12 w-24 shrink-0 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 ${room.streakBonusEnabled ? "bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 shadow-xl shadow-orange-500/50" : "bg-slate-700/60"}`}
+                          >
+                            <span className={`pointer-events-none absolute top-1.5 h-9 w-9 rounded-full bg-white shadow-lg transition-all duration-300 ${room.streakBonusEnabled ? "left-[54px]" : "left-1.5"}`}></span>
+                            <span className={`pointer-events-none absolute inset-0 flex items-center justify-center text-xs font-black ${room.streakBonusEnabled ? "pr-10 text-white" : "pl-10 text-white/70"}`}>
+                              {room.streakBonusEnabled ? "ON" : "OFF"}
+                            </span>
+                          </button>
+                        </div>
+                        
+                        {/* Streak Badges - Individual cards */}
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="flex flex-col items-center rounded-xl border border-orange-300/30 bg-gradient-to-br from-orange-400/20 to-amber-500/10 p-2 backdrop-blur-sm">
+                            <span className="text-lg font-black text-orange-300" style={{ fontFamily: "'Fredoka', sans-serif" }}>3x</span>
+                            <span className="text-xs font-bold text-amber-200">+5</span>
+                          </div>
+                          <div className="flex flex-col items-center rounded-xl border border-amber-300/30 bg-gradient-to-br from-amber-400/20 to-yellow-500/10 p-2 backdrop-blur-sm">
+                            <span className="text-lg font-black text-amber-300" style={{ fontFamily: "'Fredoka', sans-serif" }}>5x</span>
+                            <span className="text-xs font-bold text-yellow-200">+10</span>
+                          </div>
+                          <div className="flex flex-col items-center rounded-xl border border-yellow-300/30 bg-gradient-to-br from-yellow-400/20 to-orange-500/10 p-2 backdrop-blur-sm">
+                            <span className="text-lg font-black text-yellow-300" style={{ fontFamily: "'Fredoka', sans-serif" }}>7x</span>
+                            <span className="text-xs font-bold text-orange-200">+15</span>
+                          </div>
+                          <div className="flex flex-col items-center rounded-xl border border-rose-300/30 bg-gradient-to-br from-rose-400/20 to-pink-500/10 p-2 backdrop-blur-sm">
+                            <span className="text-lg font-black text-rose-300" style={{ fontFamily: "'Fredoka', sans-serif" }}>10x</span>
+                            <span className="text-xs font-bold text-pink-200">+25</span>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            setLoading(true);
-                            try {
-                              const res = await fetch(`/api/rooms/${room.code}/toggle-streak`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ hostId: currentPlayerId }),
-                              });
-                              if (res.ok) {
-                                const data = await res.json();
-                                // Update room state immediately from API response
-                                if (data.room) {
-                                  setRoom(data.room);
-                                }
-                              }
-                            } finally {
-                              setLoading(false);
-                            }
-                          }}
-                          disabled={loading}
-                          className={`relative h-9 w-[72px] sm:h-10 sm:w-20 shrink-0 self-end sm:self-auto rounded-full transition-all duration-300 ${room.streakBonusEnabled ? "bg-gradient-to-r from-orange-400 to-amber-400 shadow-lg shadow-orange-500/40" : "bg-slate-600/50"}`}
-                        >
-                          <span className={`pointer-events-none absolute top-1 sm:top-1.5 h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-white shadow-md transition-all duration-300 ${room.streakBonusEnabled ? "left-9 sm:left-11" : "left-1 sm:left-1.5"}`}></span>
-                          <span className={`pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-black ${room.streakBonusEnabled ? "pr-6 sm:pr-8 text-white" : "pl-4 sm:pl-6 text-white/70"}`}>
-                            {room.streakBonusEnabled ? "ON" : "OFF"}
-                          </span>
-                        </button>
                       </div>
                     </div>
 
@@ -854,71 +903,73 @@ export default function Home() {
 
                 {/* Player Lobby Showcase - Visible to NON-HOST players in lobby */}
                 {room?.status === "lobby" && (room.players?.length ?? 0) > 0 && !amIHost ? (
-                  <div className="relative overflow-hidden rounded-[1.8rem] border border-cyan-300/20 bg-gradient-to-br from-slate-900/80 via-purple-900/20 to-slate-900/80 p-5 shadow-2xl shadow-cyan-500/10">
+                  <div className="relative overflow-hidden rounded-[2rem] border-2 border-purple-400/40 bg-gradient-to-br from-purple-500/20 via-indigo-500/15 to-blue-500/10 p-6 backdrop-blur-sm">
                     {/* Animated background glow */}
-                    <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl animate-pulse"></div>
-                    <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-purple-400/20 blur-3xl animate-pulse delay-700"></div>
+                    <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-purple-400/30 blur-3xl animate-pulse"></div>
+                    <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-cyan-400/30 blur-3xl animate-pulse delay-700"></div>
                     
                     {/* Header */}
-                    <div className="relative flex items-center justify-between">
+                    <div className="relative flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 shadow-lg shadow-cyan-500/30">
-                          <span className="text-xl">⚡</span>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-400 via-pink-500 to-rose-400 shadow-xl shadow-purple-500/40">
+                          <span className="text-2xl">⚡</span>
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/70">Players Ready</p>
-                          <p className="text-lg font-black text-white">{room.players?.length ?? 0} Pemain Bergabung</p>
+                          <h3 className="text-lg font-black text-white" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                            {room.players?.length ?? 0} Players
+                          </h3>
+                          <p className="text-xs text-purple-200/80">Joined the party!</p>
                         </div>
                       </div>
                       {/* Live pulse indicator */}
-                      <div className="flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1.5">
+                      <div className="flex items-center gap-2 rounded-full bg-emerald-400/20 border border-emerald-400/30 px-3 py-1.5 shadow-lg">
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
                         </span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Live</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-300" style={{ fontFamily: "'Poppins', sans-serif" }}>Live</span>
                       </div>
                     </div>
                     
                     {/* Players Grid */}
-                    <div className="relative mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                    <div className="relative grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
                       {(room.players ?? []).map((p, idx) => (
                         <div
                           key={p.id}
-                          className={`group relative overflow-hidden rounded-2xl border p-3 transition-all duration-300 hover:scale-105 ${
+                          className={`group relative overflow-hidden rounded-xl p-2 transition-all duration-300 hover:scale-105 ${
                             p.id === currentPlayerId
-                              ? "border-amber-300/40 bg-gradient-to-br from-amber-400/20 via-amber-500/10 to-transparent shadow-lg shadow-amber-500/20"
+                              ? "bg-gradient-to-br from-amber-400/25 via-orange-400/15 to-transparent shadow-lg shadow-amber-500/20"
                               : p.id === room.hostId
-                                ? "border-purple-300/40 bg-gradient-to-br from-purple-400/20 via-purple-500/10 to-transparent shadow-lg shadow-purple-500/20"
-                                : "border-white/10 bg-white/5 hover:border-cyan-300/30 hover:bg-cyan-400/10"
+                                ? "bg-gradient-to-br from-purple-400/25 via-pink-400/15 to-transparent shadow-lg shadow-purple-500/20"
+                                : "bg-white/5 hover:bg-cyan-400/10 backdrop-blur-sm"
                           }`}
-                          style={{ animationDelay: `${idx * 100}ms` }}
+                          style={{ animationDelay: `${idx * 50}ms` }}
                         >
                           {/* Avatar */}
-                          <div className="flex flex-col items-center gap-2">
-                            <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-black shadow-lg ${
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className={`relative flex h-12 w-12 items-center justify-center rounded-xl text-base font-black shadow-lg ${
                               p.id === currentPlayerId
-                                ? "bg-gradient-to-br from-amber-300 via-orange-400 to-red-400 shadow-amber-500/30"
+                                ? "bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 shadow-amber-500/30"
                                 : p.id === room.hostId
-                                  ? "bg-gradient-to-br from-purple-400 via-pink-400 to-rose-400 shadow-purple-500/30"
-                                  : "bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-500 shadow-cyan-500/30"
-                            }`}>
+                                  ? "bg-gradient-to-br from-purple-400 via-pink-500 to-rose-500 shadow-purple-500/30"
+                                  : "bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 shadow-cyan-500/30"
+                            }`} style={{ fontFamily: "'Fredoka', sans-serif" }}>
                               {p.name.charAt(0).toUpperCase()}
                               {p.id === currentPlayerId && (
-                                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400 text-[10px] shadow-lg">
+                                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-[10px] shadow-lg">
                                   ✓
                                 </span>
                               )}
                             </div>
-                            <div className="text-center">
-                              <p className="max-w-[80px] truncate text-sm font-bold text-white">{p.name}</p>
+                            <div className="text-center w-full">
+                              <p className="truncate text-xs font-bold text-white px-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>{p.name}</p>
                               {p.id === room.hostId && (
-                                <span className="mt-1 inline-block rounded-full bg-purple-400/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-200">
-                                  Host
+                                <span className="mt-0.5 inline-flex items-center gap-0.5 rounded-lg bg-purple-400/30 px-1.5 py-0.5 text-[9px] font-bold uppercase text-purple-200">
+                                  <span className="text-[10px]">👑</span>
                                 </span>
                               )}
                               {p.id === currentPlayerId && p.id !== room.hostId && (
-                                <span className="mt-1 inline-block rounded-full bg-amber-400/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-200">
+                                <span className="mt-0.5 inline-block rounded-lg bg-amber-400/30 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-200">
                                   You
                                 </span>
                               )}
@@ -930,20 +981,14 @@ export default function Home() {
                     
                     {/* Category Banner */}
                     {room.category && (
-                      <div className="relative mt-5 rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-4">
-                        <div className="flex items-center justify-center gap-3">
-                          <span className="text-2xl">
-                            {room.category === "General Knowledge" && "🌍"}
-                            {room.category === "Science" && "🔬"}
-                            {room.category === "History" && "📜"}
-                            {room.category === "Sports" && "⚽"}
-                            {room.category === "Entertainment" && "🎬"}
-                            {room.category === "Geography" && "🗺️"}
-                            {!["General Knowledge", "Science", "History", "Sports", "Entertainment", "Geography"].includes(room.category) && "🎯"}
-                          </span>
+                      <div className="relative mt-6 rounded-2xl border-2 border-cyan-400/40 bg-gradient-to-r from-cyan-400/20 via-blue-500/15 to-purple-500/10 p-4 backdrop-blur-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg">
+                            <span className="text-2xl">🎯</span>
+                          </div>
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/70">Kategori Pertandingan</p>
-                            <p className="text-lg font-black text-cyan-100">{room.category}</p>
+                            <p className="text-xs font-bold uppercase tracking-wider text-cyan-200" style={{ fontFamily: "'Poppins', sans-serif" }}>Category</p>
+                            <p className="text-lg font-black text-white" style={{ fontFamily: "'Fredoka', sans-serif" }}>{room.category}</p>
                           </div>
                         </div>
                       </div>
@@ -951,15 +996,26 @@ export default function Home() {
                     
                     {/* Streak Bonus Info for non-host */}
                     {!amIHost && room.streakBonusEnabled && (
-                      <div className="relative mt-4 rounded-2xl border border-orange-300/30 bg-gradient-to-r from-orange-400/20 via-amber-500/10 to-yellow-400/20 p-4">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-lg shadow-orange-500/30">
-                            <span className="text-xl">🔥</span>
+                      <div className="relative mt-4 rounded-2xl border-2 border-orange-400/40 bg-gradient-to-r from-orange-400/20 via-amber-500/15 to-yellow-400/10 p-4 backdrop-blur-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-xl shadow-orange-500/40">
+                            <span className="text-2xl">🔥</span>
                           </div>
-                          <div className="text-center">
-                            <p className="text-sm font-black text-orange-200">Streak Bonus Aktif!</p>
-                            <p className="text-xs text-orange-300/90">Jawab benar berturut-turut untuk bonus tambahan</p>
-                            <p className="mt-1 text-[10px] text-amber-300/80">+5 (3x) • +10 (5x) • +15 (7x) • +25 (10x)</p>
+                          <div>
+                            <p className="text-sm font-black text-orange-200" style={{ fontFamily: "'Fredoka', sans-serif" }}>Streak Bonus Active!</p>
+                            <p className="text-xs text-orange-300/90">Get extra points for consecutive correct answers</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {[
+                                { streak: 3, points: 5 },
+                                { streak: 5, points: 10 },
+                                { streak: 7, points: 15 },
+                                { streak: 10, points: 25 }
+                              ].map(({ streak, points }) => (
+                                <span key={streak} className="inline-flex items-center gap-1 rounded-lg bg-amber-400/20 border border-amber-400/30 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">
+                                  {streak}x → +{points}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -967,12 +1023,12 @@ export default function Home() {
 
                     {/* Waiting message for non-host */}
                     {!amIHost && (
-                      <div className="relative mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-                        <p className="text-sm font-medium text-white/80">
+                      <div className="relative mt-4 rounded-2xl border-2 border-white/20 bg-white/10 p-4 text-center backdrop-blur-sm">
+                        <p className="text-sm font-medium text-white/90" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           <span className="mr-2 animate-bounce inline-block">⏳</span>
-                          Menunggu host memulai pertandingan...
+                          Waiting for host...
                         </p>
-                        <p className="mt-1 text-xs text-white/50">Siapkan dirimu!</p>
+                        <p className="mt-1 text-xs text-white/60">Get ready!</p>
                       </div>
                     )}
 
@@ -992,38 +1048,66 @@ export default function Home() {
                           setJoinUrl("");
                           setError("");
                         }}
-                        className="mt-4 w-full rounded-full border border-red-400/40 bg-gradient-to-r from-red-500/80 to-rose-600/80 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_8px_24px_rgba(239,68,68,0.35)] transition hover:scale-[1.02] hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)] active:scale-[0.98]"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
+                        className="mt-4 w-full rounded-2xl border-2 border-rose-400/50 bg-gradient-to-r from-rose-500 to-red-600 px-6 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-2xl shadow-rose-500/50 transition-all hover:scale-[1.02] hover:shadow-rose-500/70 active:scale-[0.98]"
                       >
-                        🚪 Keluar dari Room
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="text-lg">🚪</span> Leave Room
+                        </span>
                       </button>
                     )}
                   </div>
                 ) : null}
 
                 {amIHost && qrCode && room?.status === "lobby" ? (
-                  <div className="rounded-[1.8rem] border border-white/10 bg-black/20 p-4">
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Invite Players</p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowQR(v => !v)}
-                        className="rounded-3xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/15 hover:scale-[1.02]"
-                      >
-                        {showQR ? "Hide QR" : "Show QR"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (joinUrl) {
-                            await navigator.clipboard.writeText(joinUrl);
-                            setCopied(true);
-                            setTimeout(() => setCopied(false), 2000);
-                          }
-                        }}
-                        className="rounded-3xl bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-cyan-500/30 hover:scale-[1.02]"
-                      >
-                        {copied ? "Copied!" : "Copy Link"}
-                      </button>
+                  <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-400/40 bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-indigo-500/10 p-6 backdrop-blur-sm">
+                    {/* Decorative glow */}
+                    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl"></div>
+                    <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl"></div>
+                    
+                    <div className="relative space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg">
+                          <span className="text-2xl">👥</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-white" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                            Invite Players
+                          </h3>
+                          <p className="text-xs text-cyan-200/80">Share to join the fun!</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowQR(v => !v)}
+                          style={{ fontFamily: "'Poppins', sans-serif" }}
+                          className="rounded-2xl border-2 border-white/30 bg-white/15 px-4 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/25 hover:scale-[1.05] active:scale-95 shadow-lg"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="text-lg">📱</span>
+                            {showQR ? "Hide QR" : "Show QR"}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (joinUrl) {
+                              await navigator.clipboard.writeText(joinUrl);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }
+                          }}
+                          style={{ fontFamily: "'Poppins', sans-serif" }}
+                          className="rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 px-4 py-3.5 text-sm font-bold text-white shadow-2xl shadow-cyan-500/50 transition-all hover:shadow-cyan-500/70 hover:scale-[1.05] active:scale-95"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="text-lg">{copied ? "✅" : "🔗"}</span>
+                            {copied ? "Copied!" : "Copy Link"}
+                          </span>
+                        </button>
+                      </div>
                     </div>
                     {showQR && qrCode ? (
                       <div className="mt-4 flex flex-col items-center">
@@ -1035,51 +1119,68 @@ export default function Home() {
 
                 {/* Player List - Show in lobby, except for NON-HOST players before game starts */}
                 {room?.status === "lobby" && amIHost ? (
-                  <div className="rounded-[1.4rem] border border-emerald-300/20 bg-emerald-400/10 p-3 md:p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <h4 className="flex items-center gap-2 text-xs font-bold text-emerald-100 md:text-sm">
-                        <span className="text-base">👥</span>
-                        Pemain ({room.players?.length ?? 0})
-                      </h4>
-                    </div>
-                    <ul className="mt-3 grid gap-2">
-                      {(room.players ?? []).map((p) => (
-                        <li
-                          key={p.id}
-                          className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition ${
-                            p.id === currentPlayerId
-                              ? "border-amber-300/30 bg-amber-400/10"
-                              : "border-white/10 bg-white/5 hover:bg-white/10"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-xs font-bold text-white">
-                              {p.name.charAt(0).toUpperCase()}
-                            </span>
-                            <div>
-                              <p className="text-sm font-bold text-white">
-                                {p.name} {p.id === room.hostId && <span className="ml-1 text-[10px] text-amber-300">(Host)</span>}
-                              </p>
+                  <div className="relative overflow-hidden rounded-[2rem] border-2 border-emerald-400/40 bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/10 p-6 backdrop-blur-sm">
+                    {/* Decorative glow */}
+                    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-400/20 blur-3xl"></div>
+                    
+                    <div className="relative space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+                          <span className="text-2xl">👥</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-white" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                            Players ({room.players?.length ?? 0})
+                          </h3>
+                          <p className="text-xs text-emerald-200/80">Ready to play!</p>
+                        </div>
+                      </div>
+                      
+                      <ul className="space-y-2">
+                        {(room.players ?? []).map((p) => (
+                          <li
+                            key={p.id}
+                            className={`flex items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 transition-all ${
+                              p.id === currentPlayerId
+                                ? "border-amber-400/50 bg-gradient-to-r from-amber-400/20 to-orange-400/10 shadow-lg shadow-amber-500/20"
+                                : "border-white/20 bg-white/10 hover:bg-white/15 hover:scale-[1.02] backdrop-blur-sm"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-base font-black text-white shadow-lg" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                                {p.name.charAt(0).toUpperCase()}
+                              </span>
+                              <div>
+                                <p className="text-base font-bold text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  {p.name}
+                                </p>
+                                {p.id === room.hostId && (
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-amber-400/20 border border-amber-400/30 px-2 py-0.5 text-xs font-bold text-amber-300">
+                                    <span>👑</span> Host
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          {amIHost && p.id !== currentPlayerId ? (
-                            <button
-                              type="button"
-                              onClick={() => kickPlayer(p.id, p.name)}
-                              disabled={loading}
-                              className="rounded-lg border border-red-400/30 bg-red-400/20 px-2 py-1 text-[10px] font-bold text-red-100 transition hover:bg-red-400/30 disabled:opacity-50 md:text-xs"
-                              title={`Keluarkan ${p.name}`}
-                            >
-                              Kick
-                            </button>
-                          ) : p.id === currentPlayerId ? (
-                            <span className="rounded-lg bg-emerald-400/20 px-2 py-1 text-[10px] font-bold text-emerald-100 md:text-xs">
-                              Kamu
-                            </span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
+                            {amIHost && p.id !== currentPlayerId ? (
+                              <button
+                                type="button"
+                                onClick={() => kickPlayer(p.id, p.name)}
+                                disabled={loading}
+                                style={{ fontFamily: "'Poppins', sans-serif" }}
+                                className="rounded-xl border-2 border-rose-400/40 bg-rose-500/20 px-3 py-1.5 text-xs font-bold text-rose-100 transition-all hover:bg-rose-500/30 hover:scale-105 active:scale-95 disabled:opacity-50 shadow-lg"
+                                title={`Remove ${p.name}`}
+                              >
+                                Kick
+                              </button>
+                            ) : p.id === currentPlayerId ? (
+                              <span className="rounded-xl bg-emerald-400/30 border border-emerald-400/40 px-3 py-1.5 text-xs font-bold text-emerald-100 shadow-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                You
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 ) : null}
 
@@ -1246,7 +1347,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="mt-6 rounded-2xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-4 text-center">
-                        <p className="text-sm font-bold text-cyan-200">Menunggu admin memulai pertandingan baru...</p>
+                        <p className="text-sm font-bold text-cyan-200">Menunggu admin memulai pertandingan baru</p>
                         <p className="mt-1 text-xs text-cyan-300/70">Tetap di room, admin akan generate soal baru</p>
                       </div>
                     )}
